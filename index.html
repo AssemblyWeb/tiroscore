@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TiroScore — Dashboard</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto; margin:0; padding:24px; background:linear-gradient(180deg,#071121 0%,#081827 100%); color:#e6eef6}
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    h1{font-size:18px;margin:0}
+    .profile{display:flex;align-items:center;gap:12px}
+    .avatar{width:52px;height:52px;border-radius:999px;background:linear-gradient(180deg,#0ea5a3,#06b6d4);display:flex;align-items:center;justify-content:center;color:#012;border-radius:50%;font-weight:700}
+    .meta{font-size:13px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 2px 12px rgba(2,6,23,0.6)}
+    .kpi{font-size:28px;font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+    .section{display:flex;gap:12px}
+    .col{flex:1}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .barwrap{display:flex;gap:8px;align-items:end;height:120px;padding:10px;background:var(--glass);border-radius:8px}
+    .bar{flex:1;background:linear-gradient(180deg,var(--accent),#0ea5a3);border-radius:6px;display:flex;align-items:flex-end;justify-content:center;color:#001; font-weight:700}
+    .list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .pill{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:8px;font-size:13px}
+    footer{margin-top:18px;font-size:13px;color:var(--muted)}
+    button{background:var(--accent);color:#042;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+    /* planilla */
+    .sheet{margin-top:18px}
+    .sheet table th{background:rgba(255,255,255,0.02);font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+    .right{ text-align:right }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div style="display:flex;gap:18px;align-items:center">
+        <div class="profile">
+          <div class="avatar">AP</div>
+          <div>
+            <h1>Alfio Perino</h1>
+            <div class="meta">Arquero — Perfil rápido</div>
+          </div>
+        </div>
+        <div style="margin-left:18px;color:var(--muted);font-size:13px">
+          <div>Evento: Arquería Pinamar CET</div>
+          <div>Modalidad: 3D — Patrulla 1</div>
+        </div>
+      </div>
+
+      <div>
+        <button id="downloadJson">Descargar JSON</button>
+      </div>
+    </header>
+
+    <div class="grid" id="kpis">
+      <!-- KPIs dinámicos -->
+    </div>
+
+    <div class="section">
+      <div class="col card">
+        <div class="muted">Distribución de puntajes (por cantidad de disparos)</div>
+        <div id="bars" class="barwrap" aria-hidden="false"></div>
+        <div id="labels" style="margin-top:8px;display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"></div>
+      </div>
+
+      <div class="col card">
+        <div class="muted">Detalle por puntaje</div>
+        <table id="puntajeTable" aria-describedby="Detalle puntajes">
+          <thead>
+            <tr><th>Puntaje</th><th>Cantidad</th><th>% de disparos</th><th>Puntos totales</th><th>% de puntos</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <!-- resumen jerárquico: total puntos, total de 10 y total de 11 -->
+        <div id="puntajeSummary" style="margin-top:12px;padding:12px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;gap:12px;align-items:center;">
+          <div style="flex:1">
+            <div style="font-size:14px;color:var(--muted)">Total de puntos</div>
+            <div id="sumTotalPoints" style="font-size:20px;font-weight:800;color:var(--accent)">—</div>
+          </div>
+          <div style="width:160px">
+            <div style="font-size:13px;color:var(--muted)">Total 10</div>
+            <div id="sumTotal10" style="font-size:18px;font-weight:800">—</div>
+          </div>
+          <div style="width:160px">
+            <div style="font-size:13px;color:var(--muted)">Total 11</div>
+            <div id="sumTotal11" style="font-size:18px;font-weight:800">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col card">
+        <div class="muted">Rangos de distancia</div>
+        <div class="pill" id="rangosText" style="margin-top:6px"></div>
+        <div class="muted" style="margin-top:10px">Estaciones por rango</div>
+        <div class="list" id="rangosList"></div>
+
+        <div class="muted" style="margin-top:12px">Estaciones con doble 'M'</div>
+        <div id="dobleM" class="list" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- Planilla / sheet -->
+    <div class="card sheet" id="sheetCard">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="muted">Planilla de disparos</div>
+          <div class="small">Resumen por estación — totales y acumulado</div>
+        </div>
+        <div class="small">Intentos: <span id="metaAttempts">-</span> · Puntos: <span id="metaPoints">-</span></div>
+      </div>
+
+      <table id="sheetTable" style="margin-top:10px">
+        <thead>
+          <tr>
+            <th style="width:48px">Est.</th>
+            <th style="width:80px">Dist (m)</th>
+            <th>Altura</th>
+            <th style="width:72px">Disp. 1</th>
+            <th style="width:72px">Disp. 2</th>
+            <th style="width:72px">Total est.</th>
+            <th style="width:96px">Total acumulado</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="display:flex;gap:12px;margin-top:12px;align-items:center">
+        <div class="muted">Lista de puntajes (ejemplo)</div>
+        <div id="puntajePills" class="list" style="margin-left:8px"></div>
+      </div>
+    </div>
+
+    <footer id="meta" style="margin-top:14px"></footer>
+  </div>
+
+  <script type="module">
+  import tiroData from './index.js';
+
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+
+  // KPIs
+  const kpis = document.getElementById('kpis');
+  const addKpi = (title, value) => {
+    const c = el('div', 'card');
+    c.innerHTML = '<div class="muted">'+title+'</div><div class="kpi">'+value+'</div>';
+    kpis.appendChild(c);
+  };
+  addKpi('Intentos totales', tiroData.totalAttempts);
+  addKpi('Puntos totales', tiroData.totalPoints);
+  addKpi('Veces con doble M', tiroData.dobleMCount);
+
+  // Barras de distribución
+  const scoreKeys = ['M','5','8','10','11'];
+  const counts = {
+    M: tiroData.puntajeM.cantidad,
+    5: tiroData.puntaje5.cantidad,
+    8: tiroData.puntaje8.cantidad,
+    10: tiroData.puntaje10.cantidad,
+    11: tiroData.puntaje11.cantidad
+  };
+  const maxCount = Math.max(...Object.values(counts),1);
+  const bars = document.getElementById('bars');
+  const labels = document.getElementById('labels');
+  scoreKeys.forEach(k=>{
+    const h = (counts[k]/maxCount)*100;
+    const b = el('div','bar');
+    b.style.height = Math.max(6,h)+'%';
+    b.title = k + ': ' + counts[k];
+    b.textContent = counts[k] ? counts[k] : '';
+    bars.appendChild(b);
+    labels.appendChild(el('div','',''+k));
+  });
+
+  // Tabla de puntajes
+  const tbody = document.querySelector('#puntajeTable tbody');
+  const addRow = (name, obj) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${name}</td><td>${obj.cantidad}</td><td>${obj.porcentajeDisparos ?? obj.porcentaje}%</td><td>${obj.total}</td><td>${obj.porcentajePuntos ?? obj.porcentajePuntos}%</td>`;
+    tbody.appendChild(tr);
+  };
+  addRow('M', tiroData.puntajeM);
+  addRow('5', tiroData.puntaje5);
+  addRow('8', tiroData.puntaje8);
+  addRow('10', tiroData.puntaje10);
+  addRow('11', tiroData.puntaje11);
+
+  // rellenar resumen jerárquico (total de puntos, total 10, total 11)
+  const sumTotalPointsEl = document.getElementById('sumTotalPoints');
+  const sumTotal10El = document.getElementById('sumTotal10');
+  const sumTotal11El = document.getElementById('sumTotal11');
+
+  const totalPoints = tiroData.totalPoints ?? 0;
+  // puntaje10/11 pueden tener propiedades 'total' o 'cantidad' según tu index.js — soportamos ambas
+  const total10 = (tiroData.puntaje10 && (tiroData.puntaje10.total ?? (tiroData.puntaje10.cantidad ? tiroData.puntaje10.cantidad * 10 : 0))) || 0;
+  const total11 = (tiroData.puntaje11 && (tiroData.puntaje11.total ?? (tiroData.puntaje11.cantidad ? tiroData.puntaje11.cantidad * 11 : 0))) || 0;
+
+  sumTotalPointsEl.textContent = totalPoints;
+  sumTotal10El.textContent = total10;
+  sumTotal11El.textContent = total11;
+
+  // Rangos y doble M
+  document.getElementById('rangosText').textContent =
+    `Corta: ${tiroData.distanciaCorta[0]} - ${tiroData.distanciaCorta[1]} | Media: ${tiroData.distanciaMedia[0]} - ${tiroData.distanciaMedia[1]} | Larga: ${tiroData.distanciaLarga[0]} - ${tiroData.distanciaLarga[1]}`;
+
+  const rList = document.getElementById('rangosList');
+  const makePill = (txt) => el('div','pill',txt);
+  rList.appendChild(makePill('Corta: ' + (tiroData.estacionesCorta.join(', ') || '—')));
+  rList.appendChild(makePill('Media: ' + (tiroData.estacionesMedia.join(', ') || '—')));
+  rList.appendChild(makePill('Larga: ' + (tiroData.estacionesLarga.join(', ') || '—')));
+  const dm = document.getElementById('dobleM');
+  dm.appendChild(makePill(tiroData.estacionesDobleM.length ? tiroData.estacionesDobleM.join(', ') : '—'));
+
+  document.getElementById('meta').textContent = `Distancia mínima: ${tiroData.distanciaMinima} — Distancia máxima: ${tiroData.distanciaMaxima}`;
+
+  // Planilla: iterar EN EL ORDEN de las claves del objeto 'arquero' (ignorando comentarios)
+  const sheetTbody = document.querySelector('#sheetTable tbody');
+  let acumulado = 0;
+  const safeVal = v => (v === 'M' ? 0 : (Number(v) || 0));
+  const estacionesObj = tiroData.estaciones || {};
+
+  // obtener claves en orden numérico tal como están en el objeto
+  const keys = Object.keys(tiroData.arquero).map(k => Number(k)).sort((a,b) => a - b);
+
+  keys.forEach(keyNum => {
+    const key = String(keyNum);
+    const row = document.createElement('tr');
+    const s = tiroData.arquero[keyNum] || { disparo1: '-', disparo2: '-' };
+    const d1 = s.disparo1 !== undefined ? s.disparo1 : '-';
+    const d2 = s.disparo2 !== undefined ? s.disparo2 : '-';
+    const totEst = safeVal(d1) + safeVal(d2);
+    acumulado += totEst;
+
+    // para metadata (distancia/altura) mapeamos a la estación física 1..12 usando datos en estaciones
+    // esto no depende de comentarios del archivo, solo del índice numérico
+    const estacionFisica = ((keyNum - 1) % 12) + 1;
+    const vuelta = keyNum <= 12 ? 1 : 2;
+    const estMeta = estacionesObj[estacionFisica] || {};
+
+    row.innerHTML = `<td>${keyNum} <span style="color:var(--muted);font-size:12px">Estaca${estacionFisica}·Vuelta${vuelta}</span></td>` +
+                    `<td class="right">${estMeta.distancia ?? '—'}</td>` +
+                    `<td>${estMeta.altura ?? '—'}</td>` +
+                    `<td>${d1}</td><td>${d2}</td>` +
+                    `<td class="right">${totEst}</td><td class="right">${acumulado}</td>`;
+    sheetTbody.appendChild(row);
+  });
+
+  // --- INSERTAR FILAS RESUMEN EN LA PLANILLA (jerarquizadas) ---
+  // calcular totales: puntos (suma de puntuaciones) y cantidad de 10 / 11 (veces que salieron)
+  // NO redeclarar 'totalPoints' (ya está declarado arriba), usamos tiroData directamente
+  const sheetTotalPoints = tiroData.totalPoints ?? 0;
+  const total10Count = (tiroData.puntaje10 && (tiroData.puntaje10.cantidad ?? 0)) || 0;
+  const total11Count = (tiroData.puntaje11 && (tiroData.puntaje11.cantidad ?? 0)) || 0;
+
+  const makeSummaryRow = (label, value, opts = {}) => {
+    const tr = document.createElement('tr');
+    const labelStyle = 'font-weight:800;font-size:14px;color:#e6eef6';
+    const valueStyle = 'font-weight:900;font-size:16px;color:var(--accent);text-align:right';
+    tr.innerHTML =
+      `<td colspan="3" style="${labelStyle}">${label}</td>` +
+      `<td colspan="2"></td>` + // espacio para las columnas de disparos
+      `<td style="${valueStyle}">${value}</td>` +
+      `<td></td>`;
+    if (opts.highlight) tr.style.background = 'rgba(255,255,255,0.02)';
+    return tr;
+  };
+
+  // añadir filas en el orden pedido: total puntos, total 10 (veces), total 11 (veces)
+  sheetTbody.appendChild(makeSummaryRow('TOTAL DE PUNTOS', sheetTotalPoints, { highlight: true }));
+  sheetTbody.appendChild(makeSummaryRow('TOTAL 10', total10Count));
+  sheetTbody.appendChild(makeSummaryRow('TOTAL 11', total11Count));
+  // -------------------------------------------------------------
+
+  document.getElementById('metaAttempts').textContent = tiroData.totalAttempts;
+  document.getElementById('metaPoints').textContent = tiroData.totalPoints;
+
+  // Lista de puntajes en pills
+  const puntajePills = document.getElementById('puntajePills');
+  const pts = [
+    { label: 'M', obj: tiroData.puntajeM },
+    { label: '5', obj: tiroData.puntaje5 },
+    { label: '8', obj: tiroData.puntaje8 },
+    { label: '10', obj: tiroData.puntaje10 },
+    { label: '11', obj: tiroData.puntaje11 }
+  ];
+  pts.forEach(p=>{
+    puntajePills.appendChild(el('div','pill',`${p.label} — ${p.obj.cantidad} ( ${p.obj.porcentajeDisparos}% ) · pts: ${p.obj.total}`));
+  });
+
+  document.getElementById('downloadJson').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(tiroData, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'tiroData.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+  </script>
+</body>
+</html>
