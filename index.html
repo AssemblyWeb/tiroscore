@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TiroScore — Dashboard</title>
+  <title>TiroScore</title>
   <style>
     :root{
       --bg:#071022; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --glass:rgba(255,255,255,0.03);
@@ -87,6 +87,10 @@
         <div class="muted">Distribución de puntajes (por cantidad)</div>
         <div id="bars" class="barwrap" aria-hidden="false"></div>
         <div id="labels" style="margin-top:8px;display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"></div>
+
+        <!-- Movido: Estaciones con 'MM' (ahora aquí, debajo del gráfico) -->
+        <div style="margin-top:10px" class="muted">Estaciones con 'MM'</div>
+        <div id="dobleM" style="margin-top:8px"></div>
       </div>
 
       <div class="card">
@@ -119,8 +123,12 @@
         <div class="pill" id="rangosText" style="margin-top:8px"></div>
         <div style="margin-top:10px" class="muted">Estaciones por rango</div>
         <div id="rangosList" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"></div>
-        <div style="margin-top:12px" class="muted">Estaciones con 'MM'</div>
-        <div id="dobleM" style="margin-top:8px"></div>
+
+        <!-- NUEVO: Estaciones por altura -->
+        <div style="margin-top:10px" class="muted">Estaciones por altura</div>
+        <div id="estacionesAlturaList" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"></div>
+
+        <!-- nota: la sección de 'Estaciones con MM' fue MOVIDA arriba (debajo del gráfico) -->
       </div>
     </div>
 
@@ -148,6 +156,33 @@
         </thead>
         <tbody></tbody>
       </table>
+
+      <!-- ADICION: distribuciones solicitadas -->
+      <div id="distribuciones" style="margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px">
+        <div class="card" id="distByRangeCard">
+          <div class="muted">Distribución por rango de distancia</div>
+          <div style="overflow:auto;margin-top:8px">
+            <table id="distRangeTable" style="min-width:320px">
+              <thead>
+                <tr><th>Puntaje</th><th>Corta</th><th>Media</th><th>Larga</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="distByAlturaCard">
+          <div class="muted">Distribución por altura (Alta / Plana / Baja)</div>
+          <div style="overflow:auto;margin-top:8px">
+            <table id="alturaTable" style="min-width:320px">
+              <thead>
+                <tr><th>Puntaje</th><th>Alta</th><th>Plana</th><th>Baja</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
         <div class="muted">Lista de puntajes</div>
@@ -215,13 +250,39 @@
     document.getElementById('sumTotal11').textContent = total11Count;
 
     // Rangos & doble M
-    document.getElementById('rangosText').textContent =
-      `Corta: ${tiroData.distanciaCorta[0]} - ${tiroData.distanciaCorta[1]}`;
-    const rList = document.getElementById('rangosList');
-    rList.appendChild(el('div','pill','Corta: ' + (tiroData.estacionesCorta.join(', ') || '—')));
-    rList.appendChild(el('div','pill','Media: ' + (tiroData.estacionesMedia.join(', ') || '—')));
-    rList.appendChild(el('div','pill','Larga: ' + (tiroData.estacionesLarga.join(', ') || '—')));
-    document.getElementById('dobleM').appendChild(el('div','pill', tiroData.estacionesDobleM.length ? tiroData.estacionesDobleM.join(', ') : '—'));
+    (function renderRangosAndDobleM() {
+      const [cMin,cMax] = tiroData.distanciaCorta ?? [null,null];
+      const [mMin,mMax] = tiroData.distanciaMedia ?? [null,null];
+      const [lMin,lMax] = tiroData.distanciaLarga ?? [null,null];
+
+      document.getElementById('rangosText').textContent =
+        `Corta: ${cMin} - ${cMax} | Media: ${mMin} - ${mMax} | Larga: ${lMin} - ${lMax}`;
+
+      const rList = document.getElementById('rangosList');
+      rList.innerHTML = '';
+      rList.appendChild(el('div','pill','Corta: ' + ((tiroData.estacionesCorta||[]).join(', ') || '—')));
+      rList.appendChild(el('div','pill','Media: ' + ((tiroData.estacionesMedia||[]).join(', ') || '—')));
+      rList.appendChild(el('div','pill','Larga: ' + ((tiroData.estacionesLarga||[]).join(', ') || '—')));
+
+      // Estaciones por altura: calcular a partir de tiroData.estaciones
+      const alturaListEl = document.getElementById('estacionesAlturaList');
+      alturaListEl.innerHTML = '';
+      const altas = [], medias = [], bajas = [];
+      const estacionesObj = tiroData.estaciones || {};
+      Object.entries(estacionesObj).forEach(([id, meta]) => {
+        const h = (meta && meta.altura || '').toString().toLowerCase();
+        if (h === 'alto') altas.push(id);
+        else if (h === 'medio') medias.push(id);
+        else bajas.push(id);
+      });
+      alturaListEl.appendChild(el('div','pill','Altas: ' + (altas.join(', ') || '—')));
+      alturaListEl.appendChild(el('div','pill','Medias: ' + (medias.join(', ') || '—')));
+      alturaListEl.appendChild(el('div','pill','Bajas: ' + (bajas.join(', ') || '—')));
+
+      const dm = document.getElementById('dobleM');
+      dm.innerHTML = '';
+      dm.appendChild(el('div','pill', (tiroData.estacionesDobleM && tiroData.estacionesDobleM.length) ? tiroData.estacionesDobleM.join(', ') : '—'));
+    })();
 
     // Planilla rows in object key order (1..24). Show mapped physical station and vuelta in small label.
     const sheetTbody = document.querySelector('#sheetTable tbody');
@@ -264,6 +325,97 @@
     sheetTbody.appendChild(makeSummaryRow('TOTAL DE PUNTOS', sheetTotalPoints));
     sheetTbody.appendChild(makeSummaryRow('TOTAL 10 (veces)', total10Count));
     sheetTbody.appendChild(makeSummaryRow('TOTAL 11 (veces)', total11Count));
+
+    // --- NUEVO: Distribuciones por rango y por altura (con % por columna) ---
+    (function renderDistribuciones() {
+      const scores = ['M','5','8','10','11'];
+
+      // prepare counters
+      const ranges = { corta: {}, media: {}, larga: {} };
+      const alturas = { alta: {}, plana: {}, baja: {} };
+      scores.forEach(s => {
+        ranges.corta[s]=0; ranges.media[s]=0; ranges.larga[s]=0;
+        alturas.alta[s]=0; alturas.plana[s]=0; alturas.baja[s]=0;
+      });
+
+      // distance boundaries from tiroData (arrays [min, max])
+      const [cMin,cMax] = tiroData.distanciaCorta ?? [null,null];
+      const [mMin,mMax] = tiroData.distanciaMedia ?? [null,null];
+      const [lMin,lMax] = tiroData.distanciaLarga ?? [null,null];
+
+      const getRangeKey = (dist) => {
+        if (dist === null || dist === undefined) return null;
+        const d = Number(dist);
+        if (!Number.isFinite(d)) return null;
+        if (d >= cMin && d < cMax) return 'corta';
+        if (d >= mMin && d < mMax) return 'media';
+        if (d >= lMin && d <= lMax) return 'larga';
+        return 'larga';
+      };
+
+      // iterate shots (1..24) using object order keys
+      Object.keys(tiroData.arquero).map(k=>Number(k)).sort((a,b)=>a-b).forEach(n=>{
+        const entry = tiroData.arquero[n] || {};
+        // map to physical station 1..12
+        const estacionFisica = ((n - 1) % 12) + 1;
+        const meta = tiroData.estaciones && tiroData.estaciones[estacionFisica] ? tiroData.estaciones[estacionFisica] : {};
+        const dist = meta.distancia;
+        const rawAlt = (meta.altura || '').toString().toLowerCase();
+        // normalize altura -> alta / plana / baja
+        const alturaKey = rawAlt === 'alto' ? 'alta' : (rawAlt === 'medio' ? 'plana' : 'baja');
+
+        const shots = [entry.disparo1, entry.disparo2];
+        shots.forEach(sh => {
+          const s = (sh === undefined || sh === null) ? null : String(sh);
+          if (s === null) return;
+          const range = getRangeKey(dist);
+          if (range) ranges[range][s] = (ranges[range][s]||0)+1;
+          alturas[alturaKey][s] = (alturas[alturaKey][s]||0)+1;
+        });
+      });
+
+      // totales por columna (para calcular %)
+      const totalRangeCounts = {
+        corta: Object.values(ranges.corta).reduce((a,b)=>a+b,0),
+        media: Object.values(ranges.media).reduce((a,b)=>a+b,0),
+        larga: Object.values(ranges.larga).reduce((a,b)=>a+b,0)
+      };
+      const totalAltCounts = {
+        alta: Object.values(alturas.alta).reduce((a,b)=>a+b,0),
+        plana: Object.values(alturas.plana).reduce((a,b)=>a+b,0),
+        baja: Object.values(alturas.baja).reduce((a,b)=>a+b,0)
+      };
+
+      // render helpers: mostrar "count (pct%)"
+      const cellText = (count, total) => {
+        const pct = total > 0 ? ((count/total)*100).toFixed(1) : '0.0';
+        return `${count} (${pct}%)`;
+      };
+
+      // render tables
+      const distBody = document.querySelector('#distRangeTable tbody');
+      const alturaBody = document.querySelector('#alturaTable tbody');
+      // clear existing
+      distBody.innerHTML = '';
+      alturaBody.innerHTML = '';
+
+      scores.forEach(score=>{
+        const cortaCount = ranges.corta[score] || 0;
+        const mediaCount = ranges.media[score] || 0;
+        const largaCount = ranges.larga[score] || 0;
+        const trR = document.createElement('tr');
+        trR.innerHTML = `<td>${score}</td><td>${cellText(cortaCount, totalRangeCounts.corta)}</td><td>${cellText(mediaCount, totalRangeCounts.media)}</td><td>${cellText(largaCount, totalRangeCounts.larga)}</td>`;
+        distBody.appendChild(trR);
+
+        const altaCount = alturas.alta[score] || 0;
+        const planaCount = alturas.plana[score] || 0;
+        const bajaCount = alturas.baja[score] || 0;
+        const trA = document.createElement('tr');
+        trA.innerHTML = `<td>${score}</td><td>${cellText(altaCount, totalAltCounts.alta)}</td><td>${cellText(planaCount, totalAltCounts.plana)}</td><td>${cellText(bajaCount, totalAltCounts.baja)}</td>`;
+        alturaBody.appendChild(trA);
+      });
+    })();
+    // --- fin distribuciones ---
 
     // fill pills list
     document.getElementById('metaAttempts').textContent = tiroData.totalAttempts ?? 0;
