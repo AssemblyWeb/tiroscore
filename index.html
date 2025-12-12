@@ -8,6 +8,9 @@
     :root{
       --bg:#071022; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --glass:rgba(255,255,255,0.03);
       --gap:12px; --radius:10px;
+      --range-corta:#10b981;   /* verde */
+      --range-media:#f59e0b;   /* amarillo/ámbar */
+      --range-larga:#ef4444;   /* rojo */
     }
     /* Mobile-first layout */
     *{box-sizing:border-box}
@@ -18,36 +21,36 @@
     .avatar{width:44px;height:44px;border-radius:999px;background:linear-gradient(180deg,#0ea5a3,#06b6d4);display:flex;align-items:center;justify-content:center;color:#042;font-weight:700}
     h1{font-size:16px;margin:0}
     .meta{font-size:13px;color:var(--muted)}
-
     /* responsive grid: stacks on mobile, columns on larger */
     .grid{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-bottom:14px}
     .card{background:var(--card);padding:12px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(2,6,23,0.6)}
     .kpi{font-size:22px;font-weight:700}
     .muted{color:var(--muted);font-size:13px}
-    .barwrap{display:flex;gap:8px;align-items:end;height:110px;padding:8px;background:var(--glass);border-radius:8px;overflow:hidden}
-    .bar{flex:1;background:linear-gradient(180deg,var(--accent),#0ea5a3);border-radius:6px;display:flex;align-items:flex-end;justify-content:center;color:#012;font-weight:700}
-    .pill{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-size:13px}
-    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+
+    /* table responsiveness and visuals */
+    .tableScroll{width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;margin-top:8px;min-width:760px}
     th,td{padding:8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
     .right{text-align:right}
-    .sheet table th{background:rgba(255,255,255,0.02);font-size:13px}
-    .summary{display:flex;gap:12px;align-items:center;margin-top:12px;padding:10px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))}
-    .summary > div{flex:1}
+    .center{text-align:center}
 
-    /* larger screens: 3-column main area */
-    @media(min-width:800px){
-      .grid{grid-template-columns:repeat(3,1fr)}
-      header h1{font-size:18px}
-      .kpi{font-size:28px}
-    }
+    /* replace colored row/bg approach with small colored dot for distance */
+    .distDot{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:8px;box-shadow:0 0 0 2px rgba(0,0,0,0.35)}
+    .dist-corta{background:var(--range-corta)}
+    .dist-media{background:var(--range-media)}
+    .dist-larga{background:var(--range-larga)}
 
-    /* more breathing on very large screens */
-    @media(min-width:1200px){
-      body{padding:28px}
-      .wrap{max-width:1300px}
-    }
+    /* keep range pills styled */
+    .pill.range-corta { background: rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.18); color: #dffaf0; }
+    .pill.range-media { background: rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.18); color: #fff7e6; }
+    .pill.range-larga { background: rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.18); color: #ffecec; }
 
-    button{background:var(--accent);color:#042;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+    /* animal image and surface dot */
+    .animalImg{width:52px;height:52px;border-radius:50%;object-fit:cover;margin-left:8px;border:2px solid rgba(255,255,255,0.06)}
+    @media(max-width:420px){ .animalImg{width:52px;height:52px} table{min-width:680px} }
+
+    /* make superficie column wider visually */
+    th.surfaceCol, td.surfaceCol{min-width:140px;max-width:260px}
   </style>
 </head>
 <body>
@@ -142,20 +145,24 @@
         <div class="meta">Intentos: <span id="metaAttempts">-</span> · Puntos: <span id="metaPoints">-</span></div>
       </div>
 
-      <table id="sheetTable" style="margin-top:10px">
-        <thead>
-          <tr>
-            <th style="width:64px">N°</th>
-            <th style="width:78px">Dist (m)</th>
-            <th>Altura</th>
-            <th style="width:64px">Disp. 1</th>
-            <th style="width:64px">Disp. 2</th>
-            <th style="width:78px">Total est.</th>
-            <th style="width:96px">Acumulado</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="tableScroll">
+        <table id="sheetTable" style="margin-top:10px">
+          <thead>
+            <tr>
+              <th style="width:88px">N°</th>
+              <th style="width:260px">Animal</th>
+              <th class="surfaceCol">Superf.</th>
+              <th style="width:78px;text-align:center">Dist (m)</th>
+              <th>Altura</th>
+              <th style="width:64px">Disp. 1</th>
+              <th style="width:64px">Disp. 2</th>
+              <th style="width:78px">Total est.</th>
+              <th style="width:96px">Acumulado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
       <!-- ADICION: distribuciones solicitadas -->
       <div id="distribuciones" style="margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px">
@@ -260,9 +267,13 @@
 
       const rList = document.getElementById('rangosList');
       rList.innerHTML = '';
-      rList.appendChild(el('div','pill','Corta: ' + ((tiroData.estacionesCorta||[]).join(', ') || '—')));
-      rList.appendChild(el('div','pill','Media: ' + ((tiroData.estacionesMedia||[]).join(', ') || '—')));
-      rList.appendChild(el('div','pill','Larga: ' + ((tiroData.estacionesLarga||[]).join(', ') || '—')));
+      // usar clases de rango en las pills
+      const pillC = el('div','pill range-corta','Corta: ' + ((tiroData.estacionesCorta||[]).join(', ') || '—'));
+      const pillM = el('div','pill range-media','Media: ' + ((tiroData.estacionesMedia||[]).join(', ') || '—'));
+      const pillL = el('div','pill range-larga','Larga: ' + ((tiroData.estacionesLarga||[]).join(', ') || '—'));
+      rList.appendChild(pillC);
+      rList.appendChild(pillM);
+      rList.appendChild(pillL);
 
       // Estaciones por altura: calcular a partir de tiroData.estaciones
       const alturaListEl = document.getElementById('estacionesAlturaList');
@@ -291,6 +302,20 @@
     const estacionesObj = tiroData.estaciones || {};
     const keys = Object.keys(tiroData.arquero).map(k=>Number(k)).sort((a,b)=>a-b);
 
+    // prepare range bounds once for row rendering
+    const [rowCMin,rowCMax] = tiroData.distanciaCorta ?? [null,null];
+    const [rowMMin,rowMMax] = tiroData.distanciaMedia ?? [null,null];
+    const [rowLMin,rowLMax] = tiroData.distanciaLarga ?? [null,null];
+    const getRangeKeyRow = (dist) => {
+      if (dist === null || dist === undefined) return null;
+      const d = Number(dist);
+      if (!Number.isFinite(d)) return null;
+      if (d >= rowCMin && d < rowCMax) return 'corta';
+      if (d >= rowMMin && d < rowMMax) return 'media';
+      if (d >= rowLMin && d <= rowLMax) return 'larga';
+      return 'larga';
+    };
+
     keys.forEach(keyNum => {
       const s = tiroData.arquero[keyNum] || { disparo1:'-', disparo2:'-' };
       const d1 = s.disparo1 !== undefined ? s.disparo1 : '-';
@@ -302,12 +327,45 @@
       const vuelta = keyNum <= 12 ? 1 : 2;
       const estMeta = estacionesObj[estacionFisica] || {};
 
+      // animal / superficie
+      const animalTipo = estMeta.animal && estMeta.animal.tipo ? String(estMeta.animal.tipo) : '';
+      const superficieRaw = estMeta.animal && estMeta.animal.superficie ? String(estMeta.animal.superficie).toLowerCase() : '';
+      // map superficie to dot size class
+      let sizeClass = 'medium';
+      if (superficieRaw === 'grande') sizeClass = 'large';
+      else if (superficieRaw === 'chica') sizeClass = 'small';
+      const superficieLabel = superficieRaw || '—';
+
+      // altura arrow
+      const alturaRaw = (estMeta.altura || '').toString().toLowerCase();
+      let arrowChar = '→', arrowClass = 'right';
+      if (alturaRaw === 'bajo' || alturaRaw === 'baja') { arrowChar = '↓'; arrowClass = 'down'; }
+      else if (alturaRaw === 'alto' || alturaRaw === 'alta') { arrowChar = '↑'; arrowClass = 'up'; }
+
+      // animal image path (use lowercase + encode). image will be provided by you in img/animal/{name}.png
+      const animalFile = animalTipo ? encodeURIComponent(animalTipo.toLowerCase()) : '';
+      const imgHtml = animalFile ? `<img class="animalImg" src="img/animal/${animalFile}.png" alt="${animalTipo}" onerror="this.style.display='none'">` : `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.02)"></div>`;
+
+      // decide range class for this station's distance
+      const rangeKey = getRangeKeyRow(estMeta.distancia);
+      // build distance cell as small colored dot + value (14x14)
+      const distDotClass = rangeKey ? `dist-${rangeKey}` : '';
+      const distanciaDisplay = estMeta.distancia ?? '—';
+
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${keyNum} <span style="color:var(--muted);font-size:11px">Estaca${estacionFisica}·Vuelta${vuelta}</span></td>` +
-                     `<td class="right">${estMeta.distancia ?? '—'}</td>` +
-                     `<td>${estMeta.altura ?? '—'}</td>` +
-                     `<td>${d1}</td><td>${d2}</td>` +
-                     `<td class="right">${totEst}</td><td class="right">${acumulado}</td>`;
+      tr.innerHTML =
+        // first column: station number + small meta
+        `<td>${keyNum} <div style="color:var(--muted);font-size:11px">S${estacionFisica}·V${vuelta}</div></td>` +
+        // animal column: image then animal name
+        `<td style="display:flex;align-items:center;gap:10px">${imgHtml}<div style="display:flex;flex-direction:column;justify-content:center"><div style="font-weight:700">${animalTipo || '—'}</div><div style="color:var(--muted);font-size:12px">Animal</div></div></td>` +
+        // superficie immediately after animal
+        `<td class="surfaceCol">${/* dot */ `<span class="dot ${sizeClass}" title="${superficieLabel}" style="width:${sizeClass==='large'?20:(sizeClass==='small'?8:14)}px;height:${sizeClass==='large'?20:(sizeClass==='small'?8:14)}px;background:${sizeClass==='large'?'#34d399':(sizeClass==='small'?'#60a5fa':'#06b6d4')};display:inline-block;border-radius:50%;margin-right:8px;vertical-align:middle"></span>`}${superficieLabel}</td>` +
+        // distance cell: centered, with colored 14x14 dot before value
+        `<td class="center"><span class="distDot ${distDotClass}" title="Rango: ${rangeKey ?? '—'}"></span><span style="font-weight:700">${distanciaDisplay}</span></td>` +
+        // altura with arrow
+        `<td>${estMeta.altura ?? '—'} <span class="arrow ${arrowClass}">${arrowChar}</span></td>` +
+        `<td>${d1}</td><td>${d2}</td>` +
+        `<td class="right">${totEst}</td><td class="right">${acumulado}</td>`;
       sheetTbody.appendChild(tr);
     });
 
