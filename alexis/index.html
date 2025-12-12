@@ -88,9 +88,9 @@
     <header>
       <div style="display:flex;align-items:center;gap:12px">
         <div class="profile">
-          <div class="avatar">AP</div>
+          <div class="avatar">AY</div>
           <div>
-            <h1 id="arqueroName">Alfio Perino</h1>
+            <h1 id="arqueroName">Alexis Yardbullier</h1>
             <div class="meta">Arquero · Arquería Pinamar CET · 3D</div>
           </div>
         </div>
@@ -416,7 +416,7 @@
       // animal image (img/animal/{name}.png)
       const animalFile = animalTipo ? encodeURIComponent(animalTipo.toLowerCase()) : '';
       const imgHtml = animalFile
-        ? `<img class="animalImg" src="img/animal/${animalFile}.png" alt="${animalTipo}" onerror="this.style.display='none'">`
+        ? `<img class="animalImg" src="../img/animal/${animalFile}.png" alt="${animalTipo}" onerror="this.style.display='none'">`
         : `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.02)"></div>`;
 
       // rango de distancia para el punto coloreado
@@ -575,7 +575,7 @@
         const meta = estaciones[sid] || {};
         const animalTipo = meta.animal && meta.animal.tipo ? String(meta.animal.tipo) : '—';
         const animalFile = animalTipo && animalTipo !== '—' ? encodeURIComponent(animalTipo.toLowerCase()) : '';
-        const imgSrc = animalFile ? `img/animal/${animalFile}.png` : '';
+        const imgSrc = animalFile ? `../img/animal/${animalFile}.png` : '';
         // buscar en arquero las entradas que correspondan a esta estación (puede aparecer en primera y segunda vuelta)
         const entradas = Object.entries(tiroData.arquero || {})
           .filter(([k, e]) => Number(e && e.estacion) === sid)

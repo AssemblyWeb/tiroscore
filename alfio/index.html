@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TiroScore</title>
+  <style>
+    :root{
+      --bg:#071022; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --glass:rgba(255,255,255,0.03);
+      --gap:12px; --radius:10px;
+      --range-corta:#10b981;   /* verde */
+      --range-media:#f59e0b;   /* amarillo/ámbar */
+      --range-larga:#ef4444;   /* rojo */
+    }
+    /* Mobile-first layout */
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071121 0%,#081827 100%);color:#e6eef6;padding:16px}
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .profile{display:flex;align-items:center;gap:12px}
+    .avatar{width:44px;height:44px;border-radius:999px;background:linear-gradient(180deg,#0ea5a3,#06b6d4);display:flex;align-items:center;justify-content:center;color:#042;font-weight:700}
+    h1{font-size:16px;margin:0}
+    .meta{font-size:13px;color:var(--muted)}
+    /* responsive grid: stacks on mobile, columns on larger */
+    .grid{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-bottom:14px}
+    .card{background:var(--card);padding:12px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    .kpi{font-size:22px;font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* table responsiveness and visuals */
+    .tableScroll{width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;margin-top:8px;min-width:760px}
+    th,td{padding:8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .right{text-align:right}
+    .center{text-align:center}
+
+    /* replace colored row/bg approach with small colored dot for distance */
+    .distDot{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:8px;box-shadow:0 0 0 2px rgba(0,0,0,0.35)}
+    .dist-corta{background:var(--range-corta)}
+    .dist-media{background:var(--range-media)}
+    .dist-larga{background:var(--range-larga)}
+
+    /* keep range pills styled */
+    .pill.range-corta { background: rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.18); color: #dffaf0; }
+    .pill.range-media { background: rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.18); color: #fff7e6; }
+    .pill.range-larga { background: rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.18); color: #ffecec; }
+
+    /* animal image and surface dot */
+    .animalImg{width:52px;height:52px;border-radius:50%;object-fit:cover;margin-left:8px;border:2px solid rgba(255,255,255,0.06)}
+    @media(max-width:420px){ .animalImg{width:52px;height:52px} table{min-width:680px} }
+
+    /* make superficie column wider visually */
+    th.surfaceCol, td.surfaceCol{min-width:140px;max-width:260px}
+
+    /* Nuevo: estilos para gráfico de barras horizontal */
+    .scoreChart{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+    .scoreRow{display:flex;align-items:center;gap:10px}
+    .scoreLabel{width:36px;font-weight:700;color:var(--muted);text-align:right}
+    .scoreBarBg{flex:1;height:14px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden;display:flex;align-items:center}
+    .scoreBar{height:100%;border-radius:999px 0 0 999px;transition:width .45s ease}
+    .scoreValue{width:84px;text-align:right;color:var(--muted);font-size:13px}
+
+    /* colores para cada puntaje (puedes ajustar) */
+    .scoreBar.m{background:linear-gradient(90deg,#ef4444,#fb7185)}   /* M - rojo */
+    .scoreBar['5']{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+    .scoreBar._5{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+    .scoreBar._8{background:linear-gradient(90deg,#06b6d4,#7dd3fc)}
+    .scoreBar._10{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
+    .scoreBar._11{background:linear-gradient(90deg,#34d399,#10b981)}
+
+    /* Animal grid (3 filas x 4 columnas) */
+    .animalGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    @media(max-width:900px){ .animalGrid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:520px){ .animalGrid{grid-template-columns:repeat(1,1fr)} }
+
+    .animalCard{background:var(--card);padding:12px;border-radius:10px;display:flex;gap:12px;align-items:center;box-shadow:0 6px 18px rgba(2,6,23,0.4)}
+    .animalThumb{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.04)}
+    .animalInfo{flex:1;display:flex;flex-direction:column;gap:6px}
+    .animalName{font-weight:800;font-size:15px}
+    .shots{display:flex;gap:8px;flex-wrap:wrap}
+    .shotBadge{min-width:28px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);text-align:center;font-weight:700}
+    .shotBadge.m{background:rgba(255,255,255,0.04);color:var(--muted)}
+    .shotBadge.num{background:linear-gradient(90deg,rgba(6,182,212,0.12),rgba(96,165,250,0.06));color:var(--accent)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="profile">
+          <div class="avatar">AP</div>
+          <div>
+            <h1 id="arqueroName">Alfio Perino</h1>
+            <div class="meta">Arquero · Arquería Pinamar CET · 3D</div>
+          </div>
+        </div>
+      </div>
+      <!-- botón de descarga eliminado -->
+    </header>
+
+    <div class="grid" id="kpis">
+      <div class="card">
+        <div class="muted">Intentos totales</div>
+        <div class="kpi" id="kpiAttempts">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Puntos totales</div>
+        <div class="kpi" id="kpiPoints">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Veces con 'MM'</div>
+        <div class="kpi" id="kpiDobleM">—</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="muted">Distribución de puntajes (por cantidad)</div>
+
+        <!-- reemplazo: contenedor para gráfico de barras -->
+        <div id="bars" class="scoreChart" aria-hidden="false"></div>
+        <div id="labels" style="margin-top:8px;display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"></div>
+
+      
+      </div>
+
+      <div class="card">
+        <div class="muted">Detalle por puntaje</div>
+        <table id="puntajeTable" aria-describedby="Detalle puntajes">
+          <thead>
+            <tr><th>Puntaje</th><th>Cantidad</th><th>% de disparos</th><th>Puntos totales</th><th>% de puntos</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div id="puntajeSummary" class="summary" aria-hidden="false">
+          <div>
+            <div class="muted">Total de puntos</div>
+            <div id="sumTotalPoints" style="font-size:18px;font-weight:800;color:var(--accent)">—</div>
+          </div>
+          <div>
+            <div class="muted">Total 10 (veces)</div>
+            <div id="sumTotal10" style="font-size:16px;font-weight:800">—</div>
+          </div>
+          <div>
+            <div class="muted">Total 11 (veces)</div>
+            <div id="sumTotal11" style="font-size:16px;font-weight:800">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Rangos de distancia</div>
+        <div class="pill" id="rangosText" style="margin-top:8px"></div>
+        <div style="margin-top:10px" class="muted">Estaciones por rango</div>
+        <div id="rangosList" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"></div>
+
+        <!-- NUEVO: Estaciones por altura -->
+        <div style="margin-top:10px" class="muted">Estaciones por altura</div>
+        <div id="estacionesAlturaList" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"></div>
+
+        <!-- nota: la sección de 'Estaciones con MM' fue MOVIDA arriba (debajo del gráfico) -->
+      </div>
+    </div>
+
+    <!-- Planilla -->
+    <div class="card sheet" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="muted">Planilla de disparos</div>
+          <div class="meta">Resumen por estación — 24 disparos (2 vueltas)</div>
+        </div>
+        <div class="meta">Intentos: <span id="metaAttempts">-</span> · Puntos: <span id="metaPoints">-</span></div>
+      </div>
+
+      <div class="tableScroll">
+        <table id="sheetTable" style="margin-top:10px">
+          <thead>
+            <tr>
+              <th style="width:88px">N°</th>
+              <th style="width:260px">Animal</th>
+              <th class="surfaceCol">Superf.</th>
+              <th style="width:78px;text-align:center">Dist (m)</th>
+              <th>Altura</th>
+              <th style="width:64px">Disp. 1</th>
+              <th style="width:64px">Disp. 2</th>
+              <th style="width:78px">Total est.</th>
+              <th style="width:96px">Acumulado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ADICION: distribuciones solicitadas -->
+      <div id="distribuciones" style="margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px">
+        <div class="card" id="distByRangeCard">
+          <div class="muted">Distribución por rango de distancia</div>
+          <div style="overflow:auto;margin-top:8px">
+            <table id="distRangeTable" style="min-width:320px">
+              <thead>
+                <tr><th>Puntaje</th><th>Corta</th><th>Media</th><th>Larga</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="distByAlturaCard">
+          <div class="muted">Distribución por altura (Alta / Plana / Baja)</div>
+          <div style="overflow:auto;margin-top:8px">
+            <table id="alturaTable" style="min-width:320px">
+              <thead>
+                <tr><th>Puntaje</th><th>Alta</th><th>Plana</th><th>Baja</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <div class="muted">Lista de puntajes</div>
+        <div id="puntajePills" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+
+    <footer style="margin-top:14px" id="metaFooter"></footer>
+
+    <!-- NEW: grilla de desempeño por animal (12 estaciones -> 12 animales) -->
+    <div id="animalGrid" class="animalGrid" aria-live="polite"></div>
+
+  </div>
+  <script type="module">
+    import tiroData from './index.js';
+
+    const el = (tag, cls, txt) => { const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e; };
+
+    // KPIs
+    document.getElementById('kpiAttempts').textContent = tiroData.totalAttempts ?? 0;
+    document.getElementById('kpiPoints').textContent = tiroData.totalPoints ?? 0;
+    document.getElementById('kpiDobleM').textContent = (tiroData.dobleMCount ?? 0);
+
+    // --- REEMPLAZADO: render del gráfico de distribución por puntajes (barra de progreso) ---
+    const scoreKeys = ['M','5','8','10','11'];
+    const counts = {
+      M: tiroData.puntajeM?.cantidad ?? 0,
+      5: tiroData.puntaje5?.cantidad ?? 0,
+      8: tiroData.puntaje8?.cantidad ?? 0,
+      10: tiroData.puntaje10?.cantidad ?? 0,
+      11: tiroData.puntaje11?.cantidad ?? 0
+    };
+
+    (function renderScoreChart(){
+      const chart = document.getElementById('bars');
+      const labels = document.getElementById('labels');
+      if (!chart) return;
+      chart.innerHTML = '';
+      if (labels) labels.innerHTML = '';
+
+      const total = Object.values(counts).reduce((a,b)=>a+b,0) || 1;
+      const maxCount = Math.max(...Object.values(counts),1);
+
+      const clsFor = k => {
+        if (k === 'M') return 'm';
+        if (k === '5') return '_5';
+        if (k === '8') return '_8';
+        if (k === '10') return '_10';
+        return '_11';
+      };
+
+      scoreKeys.forEach(k=>{
+        const count = counts[k] || 0;
+        const pctOfTotal = ((count/total)*100).toFixed(1);
+        const pctOfMax = Math.max(2, ((count/maxCount)*100)); // visual width
+        const cls = clsFor(k);
+
+        const row = document.createElement('div');
+        row.className = 'scoreRow';
+        row.innerHTML = `
+          <div class="scoreLabel">${k}</div>
+          <div class="scoreBarBg"><div class="scoreBar ${cls}" style="width:${pctOfMax}%;"></div></div>
+          <div class="scoreValue">${count} (${pctOfTotal}%)</div>
+        `;
+        chart.appendChild(row);
+
+        if (labels) labels.appendChild(el('div','',''));
+      });
+    })();
+
+    // Puntaje table
+    const tbody = document.querySelector('#puntajeTable tbody');
+    function addRow(name, obj){
+      const cantidad = obj.cantidad ?? 0;
+      const total = obj.total ?? (cantidad * (name === 'M' ? 0 : Number(name)));
+      const porcentajeDisparos = obj.porcentaje ?? obj.porcentajeDisparos ?? (tiroData.totalAttempts ? parseFloat(((cantidad/tiroData.totalAttempts)*100).toFixed(2)) : 0);
+      const porcentajePuntos = obj.porcentajePuntos ?? (tiroData.totalPoints ? parseFloat(((total/(tiroData.totalPoints))*100).toFixed(2)) : 0);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${name}</td><td>${cantidad}</td><td>${porcentajeDisparos}%</td><td>${total}</td><td>${porcentajePuntos}%</td>`;
+      tbody.appendChild(tr);
+    }
+    addRow('M', tiroData.puntajeM);
+    addRow('5', tiroData.puntaje5);
+    addRow('8', tiroData.puntaje8);
+    addRow('10', tiroData.puntaje10);
+    addRow('11', tiroData.puntaje11);
+
+    // summary blocks (uses counts for 10/11, not total points)
+    document.getElementById('sumTotalPoints').textContent = tiroData.totalPoints ?? 0;
+    const total10Count = (tiroData.puntaje10 && (tiroData.puntaje10.cantidad ?? 0)) || 0;
+    const total11Count = (tiroData.puntaje11 && (tiroData.puntaje11.cantidad ?? 0)) || 0;
+    document.getElementById('sumTotal10').textContent = total10Count;
+    document.getElementById('sumTotal11').textContent = total11Count;
+
+    // Rangos & doble M
+    (function renderRangosAndDobleM() {
+      // obtener referencias a los elementos del DOM (puede que no existan en pruebas)
+      const rangosTextEl = document.getElementById('rangosText');
+      const rList = document.getElementById('rangosList');
+      const alturaListEl = document.getElementById('estacionesAlturaList');
+      const dm = document.getElementById('dobleM');
+
+      const [cMin,cMax] = tiroData.distanciaCorta ?? [null,null];
+      const [mMin,mMax] = tiroData.distanciaMedia ?? [null,null];
+      const [lMin,lMax] = tiroData.distanciaLarga ?? [null,null];
+
+      if (rangosTextEl) {
+        rangosTextEl.textContent =
+          `Corta: ${cMin} - ${cMax} | Media: ${mMin} - ${mMax} | Larga: ${lMin} - ${lMax}`;
+      }
+
+      // pills de estaciones por rango (si existe el contenedor)
+      if (rList) {
+        rList.innerHTML = '';
+        const pillC = el('div','pill range-corta','Corta: ' + ((tiroData.estacionesCorta||[]).join(', ') || '—'));
+        const pillM = el('div','pill range-media','Media: ' + ((tiroData.estacionesMedia||[]).join(', ') || '—'));
+        const pillL = el('div','pill range-larga','Larga: ' + ((tiroData.estacionesLarga||[]).join(', ') || '—'));
+        rList.appendChild(pillC);
+        rList.appendChild(pillM);
+        rList.appendChild(pillL);
+      }
+
+      // Estaciones por altura (si existe el contenedor)
+      if (alturaListEl) {
+        alturaListEl.innerHTML = '';
+        const altas = [], medias = [], bajas = [];
+        const estacionesObj = tiroData.estaciones || {};
+        Object.entries(estacionesObj).forEach(([id, meta]) => {
+          const h = (meta && meta.altura || '').toString().toLowerCase();
+          if (h === 'alto' || h === 'alta') altas.push(id);
+          else if (h === 'medio' || h === 'plana') medias.push(id);
+          else bajas.push(id);
+        });
+        alturaListEl.appendChild(el('div','pill','Altas: ' + (altas.join(', ') || '—')));
+        alturaListEl.appendChild(el('div','pill','Medias: ' + (medias.join(', ') || '—')));
+        alturaListEl.appendChild(el('div','pill','Bajas: ' + (bajas.join(', ') || '—')));
+      }
+
+      // estaciones con doble M (si existe el contenedor)
+      if (dm) {
+        dm.innerHTML = '';
+        dm.appendChild(el('div','pill', (tiroData.estacionesDobleM && tiroData.estacionesDobleM.length) ? tiroData.estacionesDobleM.join(', ') : '—'));
+      }
+     })();
+
+    // Planilla rows: construir usando la propiedad `estacion` dentro de cada entrada de `arquero`
+    // (primera vuelta entries 1..12 arrancan en estaca 10 según index.js; segunda vuelta 13..24 repiten)
+    const sheetTbody = document.querySelector('#sheetTable tbody');
+    let acumulado = 0;
+    const safeVal = v => (v === 'M' ? 0 : (Number(v) || 0));
+    const estacionesObj = tiroData.estaciones || {};
+    const keys = Object.keys(tiroData.arquero).map(k => Number(k)).sort((a,b) => a - b);
+
+    // prepare range bounds once for row rendering
+    const [rowCMin,rowCMax] = tiroData.distanciaCorta ?? [null,null];
+    const [rowMMin,rowMMax] = tiroData.distanciaMedia ?? [null,null];
+    const [rowLMin,rowLMax] = tiroData.distanciaLarga ?? [null,null];
+
+    // <-- AÑADIDO: función para obtener la clave de rango (corta/media/larga)
+    const getRangeKeyRow = (dist) => {
+      if (dist === null || dist === undefined) return null;
+      const d = Number(dist);
+      if (!Number.isFinite(d)) return null;
+      if (rowCMin !== null && rowCMax !== null && d >= rowCMin && d < rowCMax) return 'corta';
+      if (rowMMin !== null && rowMMax !== null && d >= rowMMin && d < rowMMax) return 'media';
+      if (rowLMin !== null && rowLMax !== null && d >= rowLMin && d <= rowLMax) return 'larga';
+      return null;
+    };
+    
+    keys.forEach(keyNum => {
+      const entry = tiroData.arquero[keyNum] || {};
+      const d1 = entry.disparo1 !== undefined ? entry.disparo1 : '-';
+      const d2 = entry.disparo2 !== undefined ? entry.disparo2 : '-';
+      const totEst = safeVal(d1) + safeVal(d2);
+      acumulado += totEst;
+
+      // usar la estación tal como figura en el objeto arquero (campo `estacion`)
+      const estacionFisica = Number(entry.estacion) || (((keyNum - 1) % 12) + 1);
+      const vuelta = keyNum <= 12 ? 1 : 2;
+      const estMeta = estacionesObj[estacionFisica] || {};
+
+      // animal / superficie
+      const animalTipo = estMeta.animal && estMeta.animal.tipo ? String(estMeta.animal.tipo) : '';
+      const superficieRaw = estMeta.animal && estMeta.animal.superficie ? String(estMeta.animal.superficie).toLowerCase() : '';
+      let sizeClass = 'medium';
+      if (superficieRaw === 'grande') sizeClass = 'large';
+      else if (superficieRaw === 'chica') sizeClass = 'small';
+      const superficieLabel = superficieRaw || '—';
+
+      // altura arrow
+      const alturaRaw = (estMeta.altura || '').toString().toLowerCase();
+      let arrowChar = '→', arrowClass = 'right';
+      if (alturaRaw === 'bajo' || alturaRaw === 'baja') { arrowChar = '↓'; arrowClass = 'down'; }
+      else if (alturaRaw === 'alto' || alturaRaw === 'alta') { arrowChar = '↑'; arrowClass = 'up'; }
+
+      // animal image (img/animal/{name}.png)
+      const animalFile = animalTipo ? encodeURIComponent(animalTipo.toLowerCase()) : '';
+      const imgHtml = animalFile
+        ? `<img class="animalImg" src="../img/animal/${animalFile}.png" alt="${animalTipo}" onerror="this.style.display='none'">`
+        : `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.02)"></div>`;
+
+      // rango de distancia para el punto coloreado
+      const rangeKey = getRangeKeyRow ? getRangeKeyRow(estMeta.distancia) : null;
+      const distDotClass = rangeKey ? `dist-${rangeKey}` : '';
+      const distanciaDisplay = estMeta.distancia ?? '—';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<td>${keyNum} <div style="color:var(--muted);font-size:11px">S${estacionFisica}·V${vuelta}</div></td>` +
+        `<td style="display:flex;align-items:center;gap:10px">${imgHtml}<div style="display:flex;flex-direction:column;justify-content:center"><div style="font-weight:700">${animalTipo || '—'}</div></div></td>` +
+        `<td class="surfaceCol">${'<span class="dot '+sizeClass+'" title="'+superficieLabel+'" style="width:'+ (sizeClass==='large'?20:(sizeClass==='small'?8:14)) +'px;height:'+ (sizeClass==='large'?20:(sizeClass==='small'?8:14)) +'px;background:'+(sizeClass==='large'?'#34d399':(sizeClass==='small'?'#60a5fa':'#06b6d4'))+';display:inline-block;border-radius:50%;margin-right:8px;vertical-align:middle"></span>'}${superficieLabel}</td>` +
+        `<td class="center"><span class="distDot ${distDotClass}" title="Rango: ${rangeKey ?? '—'}"></span><span style="font-weight:700">${distanciaDisplay}</span></td>` +
+        `<td>${estMeta.altura ?? '—'} <span class="arrow ${arrowClass}">${arrowChar}</span></td>` +
+        `<td>${d1}</td><td>${d2}</td>` +
+        `<td class="right">${totEst}</td><td class="right">${acumulado}</td>`;
+      sheetTbody.appendChild(tr);
+    });
+
+    // Insert summary rows into planilla BEFORE the pills area
+    const makeSummaryRow = (label, value) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<td colspan="3" style="font-weight:800;font-size:14px">${label}</td>` +
+        `<td colspan="2"></td>` +
+        `<td style="font-weight:900;color:var(--accent);text-align:right">${value}</td>` +
+        `<td></td>`;
+      return tr;
+    };
+    const sheetTotalPoints = tiroData.totalPoints ?? 0;
+    sheetTbody.appendChild(makeSummaryRow('TOTAL DE PUNTOS', sheetTotalPoints));
+    sheetTbody.appendChild(makeSummaryRow('TOTAL 10 (veces)', total10Count));
+    sheetTbody.appendChild(makeSummaryRow('TOTAL 11 (veces)', total11Count));
+
+    // --- NUEVO: Distribuciones por rango y por altura (con % por columna) ---
+    (function renderDistribuciones() {
+      const scores = ['M','5','8','10','11'];
+
+      // prepare counters
+      const ranges = { corta: {}, media: {}, larga: {} };
+      const alturas = { alta: {}, plana: {}, baja: {} };
+      scores.forEach(s => {
+        ranges.corta[s]=0; ranges.media[s]=0; ranges.larga[s]=0;
+        alturas.alta[s]=0; alturas.plana[s]=0; alturas.baja[s]=0;
+      });
+
+      // distance boundaries from tiroData (arrays [min, max])
+      const [cMin,cMax] = tiroData.distanciaCorta ?? [null,null];
+      const [mMin,mMax] = tiroData.distanciaMedia ?? [null,null];
+      const [lMin,lMax] = tiroData.distanciaLarga ?? [null,null];
+
+      const getRangeKey = (dist) => {
+        if (dist === null || dist === undefined) return null;
+        const d = Number(dist);
+        if (!Number.isFinite(d)) return null;
+        if (d >= cMin && d < cMax) return 'corta';
+        if (d >= mMin && d < mMax) return 'media';
+        if (d >= lMin && d <= lMax) return 'larga';
+        return 'larga';
+      };
+
+      // iterate shots (1..24) using object order keys
+      Object.keys(tiroData.arquero).map(k=>Number(k)).sort((a,b)=>a-b).forEach(n=>{
+        const entry = tiroData.arquero[n] || {};
+        // map to physical station 1..12
+        const estacionFisica = ((n - 1) % 12) + 1;
+        const meta = tiroData.estaciones && tiroData.estaciones[estacionFisica] ? tiroData.estaciones[estacionFisica] : {};
+        const dist = meta.distancia;
+        const rawAlt = (meta.altura || '').toString().toLowerCase();
+        // normalize altura -> alta / plana / baja
+        const alturaKey = rawAlt === 'alto' ? 'alta' : (rawAlt === 'medio' ? 'plana' : 'baja');
+
+        const shots = [entry.disparo1, entry.disparo2];
+        shots.forEach(sh => {
+          const s = (sh === undefined || sh === null) ? null : String(sh);
+          if (s === null) return;
+          const range = getRangeKey(dist);
+          if (range) ranges[range][s] = (ranges[range][s]||0)+1;
+          alturas[alturaKey][s] = (alturas[alturaKey][s]||0)+1;
+        });
+      });
+
+      // totales por columna (para calcular %)
+      const totalRangeCounts = {
+        corta: Object.values(ranges.corta).reduce((a,b)=>a+b,0),
+        media: Object.values(ranges.media).reduce((a,b)=>a+b,0),
+        larga: Object.values(ranges.larga).reduce((a,b)=>a+b,0)
+      };
+      const totalAltCounts = {
+        alta: Object.values(alturas.alta).reduce((a,b)=>a+b,0),
+        plana: Object.values(alturas.plana).reduce((a,b)=>a+b,0),
+        baja: Object.values(alturas.baja).reduce((a,b)=>a+b,0)
+      };
+
+      // render helpers: mostrar "count (pct%)"
+      const cellText = (count, total) => {
+        const pct = total > 0 ? ((count/total)*100).toFixed(1) : '0.0';
+        return `${count} (${pct}%)`;
+      };
+
+      // render tables
+      const distBody = document.querySelector('#distRangeTable tbody');
+      const alturaBody = document.querySelector('#alturaTable tbody');
+      // clear existing
+      distBody.innerHTML = '';
+      alturaBody.innerHTML = '';
+
+      scores.forEach(score=>{
+        const cortaCount = ranges.corta[score] || 0;
+        const mediaCount = ranges.media[score] || 0;
+        const largaCount = ranges.larga[score] || 0;
+        const trR = document.createElement('tr');
+        trR.innerHTML = `<td>${score}</td><td>${cellText(cortaCount, totalRangeCounts.corta)}</td><td>${cellText(mediaCount, totalRangeCounts.media)}</td><td>${cellText(largaCount, totalRangeCounts.larga)}</td>`;
+        distBody.appendChild(trR);
+
+        const altaCount = alturas.alta[score] || 0;
+        const planaCount = alturas.plana[score] || 0;
+        const bajaCount = alturas.baja[score] || 0;
+        const trA = document.createElement('tr');
+        trA.innerHTML = `<td>${score}</td><td>${cellText(altaCount, totalAltCounts.alta)}</td><td>${cellText(planaCount, totalAltCounts.plana)}</td><td>${cellText(bajaCount, totalAltCounts.baja)}</td>`;
+        alturaBody.appendChild(trA);
+      });
+    })();
+    // --- fin distribuciones ---
+
+    // fill pills list
+    document.getElementById('metaAttempts').textContent = tiroData.totalAttempts ?? 0;
+    document.getElementById('metaPoints').textContent = tiroData.totalPoints ?? 0;
+
+    const puntajePills = document.getElementById('puntajePills');
+    const pts = [
+      { label:'M', obj: tiroData.puntajeM },
+      { label:'5', obj: tiroData.puntaje5 },
+      { label:'8', obj: tiroData.puntaje8 },
+      { label:'10', obj: tiroData.puntaje10 },
+      { label:'11', obj: tiroData.puntaje11 }
+    ];
+    pts.forEach(p=>{
+      const cantidad = p.obj.cantidad ?? 0;
+      const total = p.obj.total ?? (cantidad * (p.label === 'M' ? 0 : Number(p.label)));
+      puntajePills.appendChild(el('div','pill', `${p.label} — ${cantidad} · pts: ${total}`));
+    });
+
+    // footer meta
+    document.getElementById('metaFooter').textContent = `Distancia mínima: ${tiroData.distanciaMinima} — Distancia máxima: ${tiroData.distanciaMaxima}`;
+
+    // --- NUEVO: renderizar grilla de animales con 4 disparos por animal ---
+    // --- REEMPLAZADO: animal card ahora incluye número de estación en letra más pequeña junto al nombre ---
+    (function renderAnimalGrid() {
+      const container = document.getElementById('animalGrid');
+      if (!container) return;
+      container.innerHTML = '';
+      const estaciones = tiroData.estaciones || {};
+      // recorrer estaciones físicas 1..12
+      for (let sid = 1; sid <= 12; sid++) {
+        const meta = estaciones[sid] || {};
+        const animalTipo = meta.animal && meta.animal.tipo ? String(meta.animal.tipo) : '—';
+        const animalFile = animalTipo && animalTipo !== '—' ? encodeURIComponent(animalTipo.toLowerCase()) : '';
+        const imgSrc = animalFile ? `../img/animal/${animalFile}.png` : '';
+        // buscar en arquero las entradas que correspondan a esta estación (puede aparecer en primera y segunda vuelta)
+        const entradas = Object.entries(tiroData.arquero || {})
+          .filter(([k, e]) => Number(e && e.estacion) === sid)
+          .sort((a,b)=> Number(a[0]) - Number(b[0]));
+        // construir array de hasta 4 disparos (orden: primera entrada disparo1, disparo2, segunda entrada disparo1, disparo2)
+        const shots = [];
+        entradas.forEach(([k, e]) => {
+          shots.push(e.disparo1 !== undefined ? e.disparo1 : '-');
+          shots.push(e.disparo2 !== undefined ? e.disparo2 : '-');
+        });
+        while (shots.length < 4) shots.push('-');
+
+        const card = document.createElement('div');
+        card.className = 'animalCard';
+        card.innerHTML = `
+          <img class="animalThumb" src="${imgSrc}" alt="${animalTipo}" onerror="this.style.display='none'">
+          <div class="animalInfo">
+            <div>
+              <div class="animalName">${animalTipo}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Estación ${sid}</div>
+            </div>
+            <div class="shots" aria-label="Disparos">${shots.map(s => {
+              const cls = (s === 'M' || s === 'm') ? 'm' : 'num';
+              return `<div class="shotBadge ${cls}">${s}</div>`;
+            }).join('')}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    })();
+  </script>
+</body>
+</html>
