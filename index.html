@@ -242,7 +242,7 @@
       const estMeta = estacionesObj[estacionFisica] || {};
 
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${keyNum} <span style="color:var(--muted);font-size:11px">S${estacionFisica}·V${vuelta}</span></td>` +
+      tr.innerHTML = `<td>${keyNum} <span style="color:var(--muted);font-size:11px">Estaca${estacionFisica}·Vuelta${vuelta}</span></td>` +
                      `<td class="right">${estMeta.distancia ?? '—'}</td>` +
                      `<td>${estMeta.altura ?? '—'}</td>` +
                      `<td>${d1}</td><td>${d2}</td>` +
