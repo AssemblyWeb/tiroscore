@@ -1,30 +1,30 @@
 const arquero = {
     // prinmera vuelta
-  1: { disparo1: 'M', disparo2: 'M', estacion: 10 },   // Estación 10 original
-  2: { disparo1: 'M', disparo2: 'M', estacion: 11 },   // Estación 11
-  3: { disparo1: 'M', disparo2: 'M', estacion: 12 },   // Estación 12
-  4: { disparo1: 5, disparo2: 'M', estacion: 1 },   // Estación 13
-  5: { disparo1: 10, disparo2: 5, estacion: 2 },   // Estación 14
-  6: { disparo1: 5, disparo2: 5, estacion: 3 },   // Estación 15
-  7: { disparo1: 5, disparo2: 5, estacion: 4 },   // Estación 16
-  8: { disparo1: 8, disparo2: 'M', estacion: 5 },   // Estación 17
-  9: { disparo1: 8, disparo2: 5, estacion: 6 },   // Estación 18
-  10: { disparo1: 5, disparo2: 5, estacion: 7 },  // Estación 19
+  1: { disparo1: 5, disparo2: 5, estacion: 10 },   // Estación 10 original
+  2: { disparo1: 8, disparo2: 8, estacion: 11 },   // Estación 11
+  3: { disparo1: 5, disparo2: 'M', estacion: 12 },   // Estación 12
+  4: { disparo1: 'M', disparo2: 'M', estacion: 1 },   // Estación 13
+  5: { disparo1: 5, disparo2: 5, estacion: 2 },   // Estación 14
+  6: { disparo1: 5, disparo2: 'M', estacion: 3 },   // Estación 15
+  7: { disparo1: 8, disparo2: 5, estacion: 4 },   // Estación 16
+  8: { disparo1: 'M', disparo2: 'M', estacion: 5 },   // Estación 17
+  9: { disparo1: 10, disparo2: 5, estacion: 6 },   // Estación 18
+  10: { disparo1: 'M', disparo2: 'M', estacion: 7 },  // Estación 19
   11: { disparo1: 'M', disparo2: 'M', estacion: 8 },  // Estación 20
-  12: { disparo1: 8, disparo2: 8, estacion: 9 },  // Estación 21
+  12: { disparo1: 'M', disparo2: 'M', estacion: 9 },  // Estación 21
   //segunda vuelta
-  13: { disparo1: 5, disparo2: 5, estacion: 10 },  // Estación 22
-  14: { disparo1: 5, disparo2: 5, estacion: 11 },  // Estación 23
-  15: { disparo1: 8, disparo2: 0, estacion: 12 },    // Estación 24
+  13: { disparo1: 5, disparo2: 'M', estacion: 10 },  // Estación 22
+  14: { disparo1: 10, disparo2: 5, estacion: 11 },  // Estación 23
+  15: { disparo1: 5, disparo2: 5, estacion: 12 },    // Estación 24
   16: { disparo1: 5, disparo2: 5, estacion: 1 },  // Estación 1 original
-  17: { disparo1: 8, disparo2: 8, estacion: 2 },  // Estación 2
-  18: { disparo1: 5, disparo2: 'M', estacion: 3 },  // Estación 3
-  19: { disparo1: 'M', disparo2: 'M', estacion: 4 },  // Estación 4
-  20: { disparo1: 5, disparo2: 5, estacion: 5 },  // Estación 5
-  21: { disparo1: 5, disparo2: 'M', estacion: 6 },  // Estación 6
-  22: { disparo1: 8, disparo2: 5, estacion: 7 },  // Estación 7
-  23: { disparo1: 'M', disparo2: 'M', estacion: 8 },  // Estación 8
-  24: { disparo1: 10, disparo2: 5, estacion: 9 }    // Estación 9
+  17: { disparo1: 8, disparo2: 'M', estacion: 2 },  // Estación 2
+  18: { disparo1: 8, disparo2: 5, estacion: 3 },  // Estación 3
+  19: { disparo1: 5, disparo2: 5, estacion: 4 },  // Estación 4
+  20: { disparo1: 'M', disparo2: 'M', estacion: 5 },  // Estación 5
+  21: { disparo1: 8, disparo2: 8, estacion: 6 },  // Estación 6
+  22: { disparo1: 5, disparo2: 5, estacion: 7 },  // Estación 7
+  23: { disparo1: 5, disparo2: 5, estacion: 8 },  // Estación 8
+  24: { disparo1: 8, disparo2: 'M', estacion: 9 }    // Estación 9
 };
 const estaciones = {
   1: { distancia: 17, altura: 'bajo', animal: {tipo: 'zorro', superficie: "media"}},
