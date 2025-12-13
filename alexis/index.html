@@ -81,34 +81,66 @@
     .shotBadge{min-width:28px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);text-align:center;font-weight:700}
     .shotBadge.m{background:rgba(255,255,255,0.04);color:var(--muted)}
     .shotBadge.num{background:linear-gradient(90deg,rgba(6,182,212,0.12),rgba(96,165,250,0.06));color:var(--accent)}
-  </style>
-</head>
-<body><!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TiroScore — Index</title>
-  <style>
-    :root{
-      --bg:#071022; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8;
-      --gap:12px; --radius:10px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071121 0%,#081827 100%);color:#e6eef6;padding:16px}
-    .wrap{max-width:1100px;margin:0 auto}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-    .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,#0ea5a3,#06b6d4);display:flex;align-items:center;justify-content:center;color:#042;font-weight:700}
-    h1{font-size:18px;margin:0}
-    .meta{font-size:13px;color:var(--muted)}
 
-    .cardGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:18px}
-    .folderCard{background:var(--card);padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:10px;align-items:start}
-    .folderActions{display:flex;gap:8px;width:100%;justify-content:space-between;align-items:center}
-    .btn{background:var(--accent);color:#042;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-weight:700}
-    .pill{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-size:13px;color:var(--muted)}
-    footer{margin-top:24px;color:var(--muted);font-size:13px}
-    @media(max-width:600px){ .avatar{width:44px;height:44px} }
+    /* NEW: line chart comparando puntaje perfecto vs puntaje obtenido */
+    .card#scoreLineCard {
+      background: var(--card);
+      padding: 12px;
+      border-radius: var(--radius);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      margin-top: 16px;
+    }
+    #scoreLineSvg {
+      width: 100%;
+      height: 220px;
+    }
+    #scoreLineLegend {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .chartPoint {
+      fill: var(--accent);
+      stroke: #00000011;
+      stroke-width: 0.5;
+    }
+    .chartPerf {
+      fill: transparent;
+      stroke: rgba(255,255,255,0.15);
+      stroke-width: 2;
+      stroke-dasharray: 6 4;
+    }
+    .shotThumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.02);
+    }
+    .shotItem {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 48px;
+    }
+    .shotLabel {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* legend color swatches */
+    .legendRow{display:flex;gap:12px;align-items:center;margin-left:8px}
+    .legendItem{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+    .legendSwatch{width:12px;height:12px;border-radius:3px;display:inline-block;box-shadow:0 0 0 1px rgba(0,0,0,0.15)}
+    .sw-M{background:#ef4444}     /* M - rojo */
+    .sw-5{background:#f59e0b}     /* 5 - ámbar */
+    .sw-8{background:#06b6d4}     /* 8 - celeste */
+    .sw-10{background:#60a5fa}    /* 10 - violeta/azul */
+    .sw-11{background:#34d399}    /* 11 - verde */
   </style>
 </head>
 <body>
@@ -265,7 +297,52 @@
       <div id="improveSummary" style="margin-top:8px;color:var(--muted)"></div>
       <div id="vueltaSummary" style="margin-top:8px;color:var(--muted)"></div>
     </div>
-  </div>
+
+    <!-- NEW: line chart comparando puntaje perfecto vs puntaje obtenido -->
+    <div class="card" id="scoreLineCard" style="margin-top:16px;padding:12px">
+      <div class="muted">Evolución acumulada — Puntaje perfecto vs obtenido</div>
+      <div id="scoreLineWrap" style="margin-top:10px">
+        <!-- AGRANDADO: svg más amplio y alto para mejor visualización -->
+        <svg id="scoreLineSvg" viewBox="0 0 1200 340" preserveAspectRatio="xMidYMid meet" style="width:100%;height:320px"></svg>
+        <div id="scoreLineLegend" style="display:flex;gap:12px;align-items:center;margin-top:8px">
+          <div style="display:flex;gap:8px;align-items:center"><span style="width:12px;height:8px;background:rgba(255,255,255,0.15);display:inline-block;border-radius:2px"></span><small style="color:var(--muted)">Perfecto (11/tiro)</small></div>
+          <div style="display:flex;gap:8px;align-items:center"><span style="width:12px;height:8px;background:var(--accent);display:inline-block;border-radius:2px"></span><small style="color:var(--muted)">Obtenido</small></div>
+
+          <!-- Nuevo: leyenda de colores por valor de disparo -->
+          <div class="legendRow" aria-hidden="false">
+            <div class="legendItem"><span class="legendSwatch sw-M" aria-hidden="true"></span><small>M</small></div>
+            <div class="legendItem"><span class="legendSwatch sw-5" aria-hidden="true"></span><small>5 pts</small></div>
+            <div class="legendItem"><span class="legendSwatch sw-8" aria-hidden="true"></span><small>8 pts</small></div>
+            <div class="legendItem"><span class="legendSwatch sw-10" aria-hidden="true"></span><small>10 pts</small></div>
+            <div class="legendItem"><span class="legendSwatch sw-11" aria-hidden="true"></span><small>11 pts</small></div>
+          </div>
+        </div>
+
+        <!-- REMOVIDO: strip con la imagen del animal y número de estaca -->
+      </div>
+    </div>
+
+    <style>
+      /* small styles for the line chart markers */
+      .chartPoint{fill:var(--accent);stroke:#00000011;stroke-width:0.5}
+      .chartPerf{fill:transparent;stroke:rgba(255,255,255,0.15);stroke-width:2;stroke-dasharray:6 4}
+      .shotThumb{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02)}
+      .shotItem{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:48px}
+      .shotLabel{font-size:11px;color:var(--muted);text-align:center}
+
+      /* legend color swatches */
+      .legendRow{display:flex;gap:12px;align-items:center;margin-left:8px}
+      .legendItem{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+      .legendSwatch{width:12px;height:12px;border-radius:3px;display:inline-block;box-shadow:0 0 0 1px rgba(0,0,0,0.15)}
+      .sw-M{background:#ef4444}     /* M - rojo */
+      .sw-5{background:#f59e0b}     /* 5 - ámbar */
+      .sw-8{background:#06b6d4}     /* 8 - celeste */
+      .sw-10{background:#60a5fa}    /* 10 - violeta/azul */
+      .sw-11{background:#34d399}    /* 11 - verde */
+    </style>
+
+  </div> <!-- /.wrap -->
+
   <script type="module">
     import tiroData from './index.js';
 
@@ -417,6 +494,7 @@
       const d = Number(dist);
       if (!Number.isFinite(d)) return null;
       if (rowCMin !== null && rowCMax !== null && d >= rowCMin && d < rowCMax) return 'corta';
+      // CORRECCIÓN: usar las variables correctas rowMMin/rowMMax y rowLMin/rowLMax
       if (rowMMin !== null && rowMMax !== null && d >= rowMMin && d < rowMMax) return 'media';
       if (rowLMin !== null && rowLMax !== null && d >= rowLMin && d <= rowLMax) return 'larga';
       return null;
@@ -758,6 +836,147 @@
        vueltaEl.textContent = `${compare} ${trendFirst} ${trendSecond}`;
      }
 
+    })();
+
+    (function renderScoreLine(){
+      const svg = document.getElementById('scoreLineSvg');
+      if (!svg) return;
+
+      // Build shot sequence based on arquero order (keeps mapping to estacion & animal)
+      const shotMetas = [];
+      const arqueroKeys = Object.keys(tiroData.arquero || {}).map(k=>Number(k)).sort((a,b)=>a-b);
+      arqueroKeys.forEach(k=>{
+        const e = tiroData.arquero[k] || {};
+        const station = Number(e.estacion) || (((k-1)%12)+1);
+        const meta = (tiroData.estaciones && tiroData.estaciones[station]) || {};
+        const animal = meta.animal && meta.animal.tipo ? String(meta.animal.tipo) : '—';
+        const s1 = e.disparo1 !== undefined ? e.disparo1 : null;
+        const s2 = e.disparo2 !== undefined ? e.disparo2 : null;
+        shotMetas.push({station, animal, raw: s1});
+        shotMetas.push({station, animal, raw: s2});
+      });
+
+      const shots = shotMetas.filter(s => s.raw !== undefined && s.raw !== null);
+
+      const safeValLocal = v => (v === 'M' || v === 'm' ? 0 : (Number(v) || 0));
+      const n = shots.length || 1;
+
+      // cumulative obtained and perfect
+      const obtained = [];
+      const perfect = [];
+      let acc = 0;
+      for (let i=0;i<n;i++){
+        const v = safeValLocal(shots[i].raw);
+        acc += v;
+        obtained.push(acc);
+        perfect.push(11*(i+1));
+      }
+
+      // AGRANDADO: dimensiones internas acorde al viewBox ampliado
+      const padding = {left:50,right:30,top:30,bottom:50};
+      const W = 1200; const H = 340;
+      const innerW = W - padding.left - padding.right;
+      const innerH = H - padding.top - padding.bottom;
+      const maxY = Math.max(perfect[perfect.length-1] || 11, Math.max(...obtained,0)) || 1;
+
+      const xAt = (i) => padding.left + ( (n===1) ? innerW/2 : (i/(n-1))*innerW );
+      const yAt = (v) => padding.top + (1 - (v / maxY))*innerH;
+
+      // build polyline points
+      const perfPoints = perfect.map((v,i)=> `${xAt(i)},${yAt(v)}`).join(' ');
+      const obtPoints = obtained.map((v,i)=> `${xAt(i)},${yAt(v)}`).join(' ');
+
+      // clear svg
+      while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+      const ns = 'http://www.w3.org/2000/svg';
+
+      // axes
+      const axisX = document.createElementNS(ns,'line');
+      axisX.setAttribute('x1',padding.left); axisX.setAttribute('y1',H-padding.bottom);
+      axisX.setAttribute('x2',W-padding.right); axisX.setAttribute('y2',H-padding.bottom);
+      axisX.setAttribute('stroke','rgba(255,255,255,0.06)');
+      axisX.setAttribute('stroke-width','1');
+      svg.appendChild(axisX);
+
+      const axisY = document.createElementNS(ns,'line');
+      axisY.setAttribute('x1',padding.left); axisY.setAttribute('y1',padding.top);
+      axisY.setAttribute('x2',padding.left); axisY.setAttribute('y2',H-padding.bottom);
+      axisY.setAttribute('stroke','rgba(255,255,255,0.06)');
+      axisY.setAttribute('stroke-width','1');
+      svg.appendChild(axisY);
+
+      // perfect polyline
+      const perfPoly = document.createElementNS(ns,'polyline');
+      perfPoly.setAttribute('points', perfPoints);
+      perfPoly.setAttribute('class','chartPerf');
+      svg.appendChild(perfPoly);
+
+      // obtained polyline
+      const obtPoly = document.createElementNS(ns,'polyline');
+      obtPoly.setAttribute('points', obtPoints);
+      obtPoly.setAttribute('fill','none');
+      obtPoly.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#06b6d4');
+      obtPoly.setAttribute('stroke-width','3');
+      obtPoly.setAttribute('stroke-linecap','round');
+      obtPoly.setAttribute('stroke-linejoin','round');
+      svg.appendChild(obtPoly);
+
+      // area under obtained (subtle)
+      const areaPath = document.createElementNS(ns,'path');
+      const areaD = `M ${padding.left} ${H-padding.bottom} L ${obtPoints.split(' ').map(p=>p).join(' L ')} L ${W-padding.right} ${H-padding.bottom} Z`;
+      areaPath.setAttribute('d', areaD);
+      areaPath.setAttribute('fill','rgba(6,182,212,0.08)');
+      svg.appendChild(areaPath);
+
+      // draw point markers and tooltips (colored by shot value)
+      const colorFor = (raw) => {
+        const s = String(raw);
+        if (s === 'M' || s === 'm') return '#ef4444';   // rojo
+        if (s === '5') return '#f59e0b';               // amarillo/ámbar
+        if (s === '8') return '#06b6d4';               // celeste
+        if (s === '10') return '#60a5fa';              // violeta/azul
+        if (s === '11') return '#34d399';              // verde
+        return getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#06b6d4';
+      };
+
+      obtained.forEach((val,i)=>{
+        const cx = xAt(i), cy = yAt(val);
+        const circle = document.createElementNS(ns,'circle');
+        circle.setAttribute('cx',cx);
+        circle.setAttribute('cy',cy);
+        circle.setAttribute('r',5);
+        // determine raw shot for this index (shots array defined above)
+        const raw = shots[i] && (shots[i].raw !== undefined ? shots[i].raw : null);
+        const fill = colorFor(raw);
+        circle.setAttribute('fill', fill);
+        circle.setAttribute('stroke','rgba(0,0,0,0.25)');
+        svg.appendChild(circle);
+
+        const title = document.createElementNS(ns,'title');
+        title.textContent = `Tiro ${i+1}: ${raw} — acumulado ${val}`;
+        circle.appendChild(title);
+      });
+
+      // Y ticks and labels (3 ticks)
+      for (let t=0;t<=3;t++){
+        const vy = Math.round((maxY/3)*t);
+        const y = yAt(vy);
+        const lx = document.createElementNS(ns,'line');
+        lx.setAttribute('x1',padding.left-6); lx.setAttribute('y1',y);
+        lx.setAttribute('x2',padding.left); lx.setAttribute('y2',y);
+        lx.setAttribute('stroke','rgba(255,255,255,0.06)');
+        svg.appendChild(lx);
+        const lbl = document.createElementNS(ns,'text');
+        lbl.setAttribute('x',padding.left-10); lbl.setAttribute('y',y+4);
+        lbl.setAttribute('text-anchor','end');
+        lbl.setAttribute('font-size','11');
+        lbl.setAttribute('fill','var(--muted)');
+        lbl.textContent = vy;
+        svg.appendChild(lbl);
+      }
+
+      // shot strip removed — chart now larger and uncluttered
     })();
   </script>
 </body>
