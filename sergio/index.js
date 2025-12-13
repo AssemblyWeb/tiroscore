@@ -1,31 +1,31 @@
 const arquero = {
   // Primera vuelta
-  1: { disparo1: 11, disparo2: 5, estacion: 4 },
-  2: { disparo1: 5, disparo2: 'M', estacion: 5 },
-  3: { disparo1: 8, disparo2: 5, estacion: 6 },
-  4: { disparo1: 8, disparo2: 'M', estacion: 7 },
-  5: { disparo1: 8, disparo2: 'M', estacion: 8 },
-  6: { disparo1: 8, disparo2: 5, estacion: 9 },
-  7: { disparo1: 8, disparo2: 5, estacion: 10 },
-  8: { disparo1: 11, disparo2: 8, estacion: 11 },
-  9: { disparo1: 8, disparo2: 5, estacion: 12 },
-  10: { disparo1: 'M', disparo2: 'M', estacion: 1 },
-  11: { disparo1: 8, disparo2: 8, estacion: 2 },
-  12: { disparo1: 10, disparo2: 5, estacion: 3 },
-  
+  1: { disparo1: 'M', disparo2: 'M', estacion: 2 },
+  2: { disparo1: 5, disparo2: 5, estacion: 3 },
+  3: { disparo1: 5, disparo2: 5, estacion: 4 },
+  4: { disparo1: 8, disparo2: 'M', estacion: 5 },
+  5: { disparo1: 8, disparo2: 5, estacion: 6 },
+  6: { disparo1: 5, disparo2: 'M', estacion: 7 },
+  7: { disparo1: 8, disparo2: 5, estacion: 8 },
+  8: { disparo1: 5, disparo2: 5, estacion: 9 },
+  9: { disparo1: 8, disparo2: 5, estacion: 10 },
+  10: { disparo1: 5, disparo2: 5, estacion: 11 },
+  11: { disparo1: 5, disparo2: 'M', estacion: 12 },
+  12: { disparo1: 11, disparo2: 5, estacion: 1 },
+
   // Segunda vuelta
-  13: { disparo1: 8, disparo2: 5, estacion: 4 },
-  14: { disparo1: 8, disparo2: 'M', estacion: 5 },
-  15: { disparo1: 8, disparo2: 8, estacion: 6 },
-  16: { disparo1: 8, disparo2: 5, estacion: 7 },
-  17: { disparo1: 8, disparo2: 5, estacion: 8 },
-  18: { disparo1: 5, disparo2: 5, estacion: 9 },
-  19: { disparo1: 8, disparo2: 5, estacion: 10 },
-  20: { disparo1: 10, disparo2: 8, estacion: 11 },
-  21: { disparo1: 8, disparo2: 5, estacion: 12 },
-  22: { disparo1: 8, disparo2: 'M', estacion: 1 },
-  23: { disparo1: 11, disparo2: 10, estacion: 2 },
-  24: { disparo1: 8, disparo2: 8, estacion: 3 }
+  13: { disparo1: 'M', disparo2: 'M', estacion: 2 },
+  14: { disparo1: 8, disparo2: 'M', estacion: 3 },
+  15: { disparo1: 8, disparo2: 'M', estacion: 4 },
+  16: { disparo1: 5, disparo2: 'M', estacion: 5 },
+  17: { disparo1: 5, disparo2: 5, estacion: 6 }, // El segundo 5 tiene un trazo similar al de la fila 8, asumo 5
+  18: { disparo1: 5, disparo2: 5, estacion: 7 },
+  19: { disparo1: 'M', disparo2: 'M', estacion: 8 },
+  20: { disparo1: 'M', disparo2: 'M', estacion: 9 },
+  21: { disparo1: 8, disparo2: 5, estacion: 10 }, 
+  22: { disparo1: 10, disparo2: 5, estacion: 11 },
+  23: { disparo1: 8, disparo2: 8, estacion: 12 },
+  24: { disparo1: 5, disparo2: 'M', estacion: 1 }
 };
 const estaciones = {
   1: { distancia: 17, altura: 'bajo', animal: {tipo: 'zorro', superficie: "media"}},
