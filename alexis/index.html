@@ -112,60 +112,7 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="avatar">TS</div>
-        <div>
-          <h1>Indice — TiroScore</h1>
-          <div class="meta">Abrí la carpeta del arquero para ver su planilla</div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:center">
-        <!-- botón que redirige a 'folders.html' (puedes crear ese archivo si necesario) -->
-        <a class="btn" href="./folders.html">Folders</a>
-      </div>
-    </header>
-
-    <section>
-      <div class="muted">Arqueros disponibles</div>
-      <div class="cardGrid" id="foldersList">
-        <!-- carpetas estáticas (ajustá o agregá según tus carpetas) -->
-        <div class="folderCard">
-          <div style="display:flex;align-items:center;gap:12px;width:100%">
-            <div class="avatar">A</div>
-            <div>
-              <div style="font-weight:800">alfio</div>
-              <div class="meta">Carpeta: /alfio</div>
-            </div>
-          </div>
-          <div class="folderActions">
-            <a class="btn" href="./alfio/">Abrir</a>
-            <div class="pill">index.html</div>
-          </div>
-        </div>
-
-        <div class="folderCard">
-          <div style="display:flex;align-items:center;gap:12px;width:100%">
-            <div class="avatar">AY</div>
-            <div>
-              <div style="font-weight:800">alexis</div>
-              <div class="meta">Carpeta: /alexis</div>
-            </div>
-          </div>
-          <div class="folderActions">
-            <a class="btn" href="./alexis/">Abrir</a>
-            <div class="pill">index.html</div>
-          </div>
-        </div>
-
-        <!-- ejemplo: añade más cards manualmente para otras carpetas -->
-      </div>
-    </section>
-
-    <footer>
-      Abre una carpeta para ver la planilla del arquero. Si querés agregar más carpetas, copia/modifica las entradas en este archivo.
+   
   <div class="wrap">
     <header>
       <div style="display:flex;align-items:center;gap:12px">
@@ -312,6 +259,12 @@
     <!-- NEW: grilla de desempeño por animal (12 estaciones -> 12 animales) -->
     <div id="animalGrid" class="animalGrid" aria-live="polite"></div>
 
+    <!-- NEW: resumen de desempeño (positivo + mejoras) -->
+    <div id="performanceSummary" class="card" style="margin-top:16px">
+      <div id="positiveSummary" style="font-weight:700"></div>
+      <div id="improveSummary" style="margin-top:8px;color:var(--muted)"></div>
+      <div id="vueltaSummary" style="margin-top:8px;color:var(--muted)"></div>
+    </div>
   </div>
   <script type="module">
     import tiroData from './index.js';
@@ -687,6 +640,124 @@
         `;
         container.appendChild(card);
       }
+    })();
+
+    // --- NUEVO: generar textos resumidos basados en estadísticas ---
+    (function renderPerformanceSummary(){
+      const positiveEl = document.getElementById('positiveSummary');
+      const improveEl = document.getElementById('improveSummary');
+      const vueltaEl = document.getElementById('vueltaSummary');
+      if (!positiveEl || !improveEl) return;
+
+      // Totales básicos
+      // avoid mixing '??' and '||' which causes a syntax error — compute fallback sum directly
+      const totalAttempts = tiroData.totalAttempts ?? (
+        (tiroData.puntajeM?.cantidad ?? 0) +
+        (tiroData.puntaje5?.cantidad ?? 0) +
+        (tiroData.puntaje8?.cantidad ?? 0) +
+        (tiroData.puntaje10?.cantidad ?? 0) +
+        (tiroData.puntaje11?.cantidad ?? 0)
+      );
+      const totalPoints = tiroData.totalPoints ?? 0;
+      const mCount = tiroData.puntajeM?.cantidad ?? 0;
+      const goodCount = (tiroData.puntaje10?.cantidad ?? 0) + (tiroData.puntaje11?.cantidad ?? 0);
+      const missPct = totalAttempts > 0 ? ((mCount / totalAttempts) * 100) : 0;
+      const goodPct = totalAttempts > 0 ? ((goodCount / totalAttempts) * 100) : 0;
+
+      // determinar mejor rango (corta/media/larga) por 10+11
+      const rangeGood = { corta:0, media:0, larga:0 };
+      const [cMin,cMax] = tiroData.distanciaCorta ?? [null,null];
+      const [mMin,mMax] = tiroData.distanciaMedia ?? [null,null];
+      const [lMin,lMax] = tiroData.distanciaLarga ?? [null,null];
+      const getRange = (d) => {
+        if (d==null) return null;
+        const n = Number(d);
+        if (!Number.isFinite(n)) return null;
+        if (cMin!=null && cMax!=null && n >= cMin && n < cMax) return 'corta';
+        if (mMin!=null && mMax!=null && n >= mMin && n < mMax) return 'media';
+        return 'larga';
+      };
+
+      // recorrer disparos y contar 10/11 por rango
+      Object.values(tiroData.arquero || {}).forEach(entry => {
+        const estacion = Number(entry.estacion) || null;
+        const meta = tiroData.estaciones && estacion ? tiroData.estaciones[estacion] : null;
+        const dist = meta?.distancia ?? null;
+        const rng = getRange(dist) || 'larga';
+        [entry.disparo1, entry.disparo2].forEach(sh => {
+          const v = sh === undefined || sh === null ? null : (typeof sh === 'string' ? sh : String(sh));
+          if (v === '10' || v === '11' || v === 10 || v === 11) rangeGood[rng] += 1;
+        });
+      });
+
+      // elegir mejor rango
+      const bestRange = Object.entries(rangeGood).reduce((best, cur) => cur[1] > best[1] ? cur : best, ['corta',0])[0];
+
+      // textos breves
+      const posParts = [];
+      posParts.push(`Puntos totales: ${totalPoints}.`);
+      if (goodCount > 0) posParts.push(`Buen porcentaje de tiros altos: ${goodCount} (${goodPct.toFixed(1)}%).`);
+      else posParts.push(`Pocos tiros 10/11 (${goodPct.toFixed(1)}%).`);
+      if (bestRange) posParts.push(`Mejor desempeño en rango: ${bestRange}.`);
+      positiveEl.textContent = posParts.join(' ');
+
+      const improvParts = [];
+      if (missPct > 8) improvParts.push(`Reducir las faltas ('M'): actualmente ${mCount} (${missPct.toFixed(1)}%).`);
+      else improvParts.push(`Baja tasa de faltas (${missPct.toFixed(1)}%).`);
+      // sugerir trabajar rangos con bajo conteo de 10/11
+      const rangesOrder = ['corta','media','larga'];
+      const lowRange = rangesOrder.reduce((low, r) => (rangeGood[r] < rangeGood[low] ? r : low), 'corta');
+      if (lowRange) improvParts.push(`Trabajar precisión en rango ${lowRange} (menos tiros de 10/11).`);
+      improvParts.push('Mejorar consistencia en entregas largas y apuntado en dianas altas.');
+      improveEl.textContent = improvParts.join(' ');
+
+     // --- Comparación entre primera y segunda vuelta ---
+     if (vueltaEl) {
+       let firstPoints = 0, secondPoints = 0;
+       let firstAttempts = 0, secondAttempts = 0;
+       let firstMiss = 0, secondMiss = 0;
+       let firstGood = 0, secondGood = 0;
+       // para detectar inicio/final dentro de cada vuelta
+       let fStart = 0, fEnd = 0, sStart = 0, sEnd = 0;
+
+       Object.entries(tiroData.arquero || {}).forEach(([k, entry]) => {
+         const idx = Number(k);
+         const pos = ((idx - 1) % 12) + 1; // 1..12
+         const isFirst = idx <= 12;
+         const shots = [entry.disparo1, entry.disparo2];
+         shots.forEach(sh => {
+           if (sh === undefined || sh === null) return;
+           const sval = (sh === 'M') ? 0 : (Number(sh) || 0);
+           const isMiss = (String(sh) === 'M' || String(sh) === 'm');
+           const isGood = (String(sh) === '10' || String(sh) === '11' || sh === 10 || sh === 11);
+           if (isFirst) {
+             firstPoints += sval;
+             firstAttempts += 1;
+             if (isMiss) firstMiss += 1;
+             if (isGood) firstGood += 1;
+             if (pos <= 6) fStart += sval; else fEnd += sval;
+           } else {
+             secondPoints += sval;
+             secondAttempts += 1;
+             if (isMiss) secondMiss += 1;
+             if (isGood) secondGood += 1;
+             if (pos <= 6) sStart += sval; else sEnd += sval;
+           }
+         });
+       });
+
+       const compare = firstPoints === secondPoints
+         ? `Puntuación similar entre vueltas: ${firstPoints} pts en la 1ª y ${secondPoints} pts en la 2ª.`
+         : (firstPoints > secondPoints
+           ? `Mejor en la primera vuelta (${firstPoints} pts) vs segunda (${secondPoints} pts).`
+           : `Mejor en la segunda vuelta (${secondPoints} pts) vs primera (${firstPoints} pts).`);
+
+       const trendFirst = fEnd > fStart ? 'Mejoró hacia el final de la 1ª vuelta.' : (fEnd < fStart ? 'Rendimiento bajó hacia el final de la 1ª vuelta.' : 'Rendimiento estable en la 1ª vuelta.');
+       const trendSecond = sEnd > sStart ? 'Mejoró hacia el final de la 2ª vuelta.' : (sEnd < sStart ? 'Rendimiento bajó hacia el final de la 2ª vuelta.' : 'Rendimiento estable en la 2ª vuelta.');
+
+       vueltaEl.textContent = `${compare} ${trendFirst} ${trendSecond}`;
+     }
+
     })();
   </script>
 </body>
