@@ -3,9 +3,9 @@ import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
 import { getAnimal, getArcher, getArcherMetrics, tournament } from '@/lib/tournaments'
 
-export function generateStaticParams() {
-  return [{ archerSlug: 'alfio-perino', fechaSlug: 'fecha1' }]
-}
+// export function generateStaticParams() {
+//   return [{ archerSlug: 'alfio-perino', fechaSlug: 'fecha1' }]
+// }
 
 export default async function ArcherTournamentPage({
   params,
@@ -30,6 +30,8 @@ export default async function ArcherTournamentPage({
   const metrics = getArcherMetrics(archer)
   const encabezado = archer.encabezado
   const stationAverage = Math.round(metrics.total / archer.stations.length)
+  console.log("metrics",metrics)
+  console.log("archer",archer)
 
   return (
     <main className="min-h-screen bg-background">

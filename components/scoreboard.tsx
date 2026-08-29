@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Search, X, ArrowUpRight } from 'lucide-react'
-import { totalScores } from '@/lib/ranking'
 import type { RankingArcher, RankingDivision, SeasonInfo } from '@/lib/types/ranking'
 
 const categories = ['Tradicional', 'Raso', 'Longbow', 'Cazador']
@@ -38,7 +37,7 @@ function groupByDivision(entries: RankingArcher[]): RankingDivision[] {
     .sort(([a], [b]) => compareDivisions(a, b))
     .map(([name, rows]) => ({
       name,
-      rows: [...rows].sort((a, b) => totalScores(b.scores) - totalScores(a.scores)),
+      rows: [...rows].sort((a, b) => b.total - a.total),
     }))
 }
 
@@ -74,7 +73,7 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
               className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50"
               aria-hidden="true"
             />
-            <label htmlFor="search" className="sr-only">
+            {/* <label htmlFor="search" className="sr-only">
               Buscar arquero
             </label>
             <input
@@ -83,7 +82,7 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar arquero"
               className="h-10 w-full rounded-lg border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-white/45 focus:border-primary focus:ring-2 focus:ring-primary/30"
-            />
+            /> */}
           </div>
         </div>
       </header>
@@ -144,7 +143,7 @@ function DivisionTable({
     <section aria-labelledby={division.name.replaceAll(' ', '-')}>
       <div className="mb-3 flex items-center justify-between">
         <h3 id={division.name.replaceAll(' ', '-')} className="text-2xl font-bold tracking-tight">
-          {division.name}
+          {division.name} 
         </h3>
         <span className="font-mono text-xs text-muted-foreground">{division.rows.length} arqueros</span>
       </div>
@@ -199,10 +198,10 @@ function DivisionTable({
                 <td className="px-4 py-3 text-muted-foreground">{row.location}</td>
                 {row.scores.map((score, i) => (
                   <td key={i} className="px-4 py-3 text-center font-semibold">
-                    {score ?? '—'}
+                    {score==null || score==0 ? '—' : score}
                   </td>
                 ))}
-                <td className="px-4 py-3 text-right font-mono font-bold">{totalScores(row.scores)}</td>
+                <td className="px-4 py-3 text-right font-mono font-bold">{row.total}</td>
               </tr>
             ))}
           </tbody>
@@ -245,7 +244,7 @@ function ArcherPanel({ archer, onClose }: { archer: RankingArcher; onClose: () =
         <div className="mt-8 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-accent p-4">
             <p className="text-xs text-muted-foreground">Puntaje total</p>
-            <p className="mt-1 font-mono text-3xl font-bold">{totalScores(archer.scores)}</p>
+            <p className="mt-1 font-mono text-3xl font-bold">{archer.total}</p>
           </div>
           <div className="rounded-xl bg-muted p-4">
             <p className="text-xs text-muted-foreground">División</p>

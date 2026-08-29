@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, BarChart3, CalendarDays, MapPin, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
-import { archers, getAnimal, getStationAverage, tournament, tournamentStats, total } from '@/lib/tournaments'
+import {  getAnimal, getStationAverage, tournament, tournamentStats, total } from '@/lib/tournaments'
+import { getRankingEntries } from '@/lib/ranking'
 
 export default async function TournamentPage({ params }: { params: Promise<{ slug: string }> }) {
   await params
-  const ranked = [...archers].sort((a, b) => total(b.scores) - total(a.scores))
+  const rankingEntries = await getRankingEntries()
+  const ranked = [...rankingEntries].sort((a, b) => total(b.scores) - total(a.scores))
   const highest = Math.max(...Array.from({ length: tournament.stations }, (_, i) => getStationAverage(i + 1)))
 
   return <main className="min-h-screen bg-background">

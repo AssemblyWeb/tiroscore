@@ -13,6 +13,7 @@ type ArqueroRow = {
   torneo_2: number | null
   torneo_3: number | null
   torneo_4: number | null
+  total: number
 }
 
 const DEFAULT_SEASON: SeasonInfo = {
@@ -21,8 +22,7 @@ const DEFAULT_SEASON: SeasonInfo = {
   subtitle: 'Liga Pinamarense de Arquería 3D · Temporada 2026',
 }
 
-export const totalScores = (scores: (number | null)[]) =>
-  scores.reduce<number>((sum, score) => sum + (score ?? 0), 0)
+
 
 function mapArquero(row: ArqueroRow): RankingArcher {
   return {
@@ -34,6 +34,7 @@ function mapArquero(row: ArqueroRow): RankingArcher {
     division: row.division,
     category: row.categoria,
     scores: [row.torneo_1, row.torneo_2, row.torneo_3, row.torneo_4],
+    total: row.total,
   }
 }
 
@@ -42,7 +43,7 @@ export async function getRankingEntries(): Promise<RankingArcher[]> {
 
   const { data, error } = await supabase
     .from('arqueros')
-    .select('id, nombre, club, categoria, division, localidad, torneo_1, torneo_2, torneo_3, torneo_4')
+    .select('id, nombre, club, categoria, division, localidad, torneo_1, torneo_2, torneo_3, torneo_4, total')
     .order('nombre')
 
   if (error) throw error

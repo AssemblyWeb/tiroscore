@@ -1,10 +1,9 @@
 import { Scoreboard } from '@/components/scoreboard'
 import { formatSupabaseError } from '@/lib/supabase/errors'
-import { getRankingEntries, getSeasonInfo } from '@/lib/ranking'
+import { getRankingEntries, getSeasonInfo  } from '@/lib/ranking'
 
 export default async function Page() {
   const season = getSeasonInfo()
-
   try {
     const entries = await getRankingEntries()
 

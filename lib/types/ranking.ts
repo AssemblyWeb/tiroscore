@@ -7,6 +7,7 @@ export type RankingArcher = {
   division: string
   category: string
   scores: (number | null)[]
+  total: number
 }
 
 export type RankingDivision = {
