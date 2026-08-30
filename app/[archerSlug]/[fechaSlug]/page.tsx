@@ -14,6 +14,8 @@ export default async function ArcherTournamentPage({
 }) {
   const { archerSlug, fechaSlug } = await params
   const archer = getArcher(archerSlug)
+  console.log("archerSlug",archerSlug)
+  console.log("fechaSlug",fechaSlug)
 
   if (!archer || fechaSlug !== 'fecha1') {
     return (
@@ -30,8 +32,6 @@ export default async function ArcherTournamentPage({
   const metrics = getArcherMetrics(archer)
   const encabezado = archer.encabezado
   const stationAverage = Math.round(metrics.total / archer.stations.length)
-  console.log("metrics",metrics)
-  console.log("archer",archer)
 
   return (
     <main className="min-h-screen bg-background">

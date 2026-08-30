@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Search, X, ArrowUpRight } from 'lucide-react'
-import type { RankingArcher, RankingDivision, SeasonInfo } from '@/lib/types/ranking'
+import type { RankingArcher, RankingDivision, SeasonInfo, } from '@/lib/types/ranking'
+import  { getTournamentEntries } from '@/lib/ranking'
 
 const categories = ['Tradicional', 'Raso', 'Longbow', 'Cazador']
 
@@ -55,6 +56,28 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
     return groupByDivision(filtered)
   }, [entries, category, query])
 
+  function TournamentEntriesList({ archer }: { archer: number }) {
+    const [entries, setEntries] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+  
+    console.log("gedasda")
+    // useEffect(() => {
+    //   async function loadData() {
+    //     try {
+    //       setLoading(true)
+    //       const data = await getTournamentEntries(arqueroId)
+    //       setEntries(data)
+    //     } catch (err: any) {
+    //       setError(err.message)
+    //     } finally {
+    //       setLoading(false)
+    //     }
+    //   }
+  
+    //   loadData()
+    // }, [arqueroId])
+  }
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-black text-white">
@@ -66,14 +89,15 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">
               {season.name}
             </h1>
-            <p className="mt-2 text-sm text-white/85 sm:text-base">{season.subtitle}</p>
+            <p className="mt-2 text-sm text-white sm:text-base">{season.subtitle}</p>
           </div>
-          <div className="relative w-full max-w-sm">
+          {/* search filter */}
+          {/* <div className="relative w-full max-w-sm">
             <Search
               className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50"
               aria-hidden="true"
             />
-            {/* <label htmlFor="search" className="sr-only">
+            <label htmlFor="search" className="sr-only">
               Buscar arquero
             </label>
             <input
@@ -82,12 +106,15 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar arquero"
               className="h-10 w-full rounded-lg border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-white/45 focus:border-primary focus:ring-2 focus:ring-primary/30"
-            /> */}
-          </div>
+            />
+          </div> */}
         </div>
       </header>
 
       <main className="mx-auto max-w-[1400px] px-3 pb-20 pt-6 sm:px-5 lg:px-10">
+      <h2 className="mt-1 mb-7 text-center text-3xl font-extrabold tracking-tight sm:text-4xl">Resultados</h2>
+
+        {/* button nav */}
         <nav aria-label="Categorías de arco" className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
           {categories.map((item) => (
             <button
@@ -105,12 +132,11 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
           ))}
         </nav>
 
-        <div className="mt-8 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mt-8 flex flex-col gap-4 pb-0 sm:flex-row justify-between">
           <div>
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Torneo · {category}
             </p>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">Resultados</h2>
           </div>
         </div>
 

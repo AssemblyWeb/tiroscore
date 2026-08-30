@@ -49,6 +49,33 @@ export async function getRankingEntries(): Promise<RankingArcher[]> {
   if (error) throw error
   return (data ?? []).map(mapArquero)
 }
+export async function getTournamentEntries(arquero_id: string): Promise<any[]> {
+  const supabase = createSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('planillas')
+    .select(`
+      id,
+      torneo_id,
+      arquero_id,
+      patrulla,
+      division,
+      clase,
+      arqueros (
+        id,
+        nombre,
+        club,
+        categoria,
+        localidad
+      )
+    `)
+    .eq('arquero_id', 6)
+    // .eq('torneo_id', tournamentSlug)
+    .order('id')
+
+  if (error) throw error
+  return data || []
+}
 
 export function getSeasonInfo(): SeasonInfo {
   return DEFAULT_SEASON
