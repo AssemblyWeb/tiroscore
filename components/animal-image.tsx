@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import type { Animal } from '@/lib/tournaments'
+import type { Animal } from '@/lib/types/ranking'
 
 type AnimalImageProps = {
   animal?: Pick<Animal, 'tipo' | 'imagen'> | null

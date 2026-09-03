@@ -1,36 +1,185 @@
 import Link from 'next/link'
-import { ArrowLeft, ArrowUpRight, BarChart3, CalendarDays, MapPin, Target, Trophy } from 'lucide-react'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
-import {  getAnimal, getStationAverage, tournament, tournamentStats, total } from '@/lib/tournaments'
-import { getRankingEntries } from '@/lib/ranking'
+import {
+  getTournamentById,
+  getTournamentClassification,
+  getTournamentStations,
+  getTournamentsOrdered,
+} from '@/lib/ranking'
 
 export default async function TournamentPage({ params }: { params: Promise<{ slug: string }> }) {
-  await params
-  const rankingEntries = await getRankingEntries()
-  const ranked = [...rankingEntries].sort((a, b) => total(b.scores) - total(a.scores))
-  const highest = Math.max(...Array.from({ length: tournament.stations }, (_, i) => getStationAverage(i + 1)))
+  const { slug } = await params
+  const tournament = await getTournamentById(slug)
 
-  return <main className="min-h-screen bg-background">
-    <div className="mx-auto max-w-[1400px] px-5 pb-20 pt-6 lg:px-10">
-      <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-primary"><ArrowLeft className="size-4" /> Volver al scoreboard</Link>
-      <header className="mt-8 flex flex-col justify-between gap-6 border-b border-border pb-8 md:flex-row md:items-end">
-        <div><p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-primary">Detalle del torneo · {tournament.category}</p><h1 className="mt-2 max-w-3xl text-balance text-4xl font-extrabold tracking-tight sm:text-5xl">{tournament.name}</h1><div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground"><span className="inline-flex items-center gap-2"><CalendarDays className="size-4 text-primary" />{tournament.date}</span><span className="inline-flex items-center gap-2"><MapPin className="size-4 text-primary" />{tournament.location}</span><span>{tournament.config.tipoTorneo}</span></div></div>
-        <div className="rounded-xl bg-secondary p-5 text-secondary-foreground"><Trophy className="size-6 text-primary" /><p className="mt-4 font-mono text-3xl font-bold">{tournamentStats.participants}</p><p className="text-sm opacity-80">arqueros clasificados</p></div>
-      </header>
+  if (!tournament) notFound()
 
-      <section aria-label="Resumen del torneo" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[['Promedio general', `${tournamentStats.average} pts`, 'por arquero'], ['Flechas lanzadas', tournamentStats.arrows.toLocaleString('es-AR'), 'en todas las estaciones'], ['Puntaje máximo', `${tournamentStats.maxScore} pts`, 'posibles'], ['Estaciones', `${tournament.stations}`, 'blancos 3D']].map(([label, value, detail]) => <div key={label} className="rounded-xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 font-mono text-3xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>)}
-      </section>
+  const [stations, ranked, allTournaments] = await Promise.all([
+    getTournamentStations(tournament.id),
+    getTournamentClassification(tournament.id),
+    getTournamentsOrdered(),
+  ])
 
-      <section className="mt-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-xl border border-border bg-card p-5 sm:p-6"><div className="flex items-start justify-between"><div><p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">Rendimiento por estación</p><h2 className="mt-2 text-xl font-bold">Dónde se definió el torneo</h2></div><BarChart3 className="size-5 text-muted-foreground" /></div><div className="mt-7 space-y-4">{Array.from({ length: tournament.stations }, (_, i) => { const average = getStationAverage(i + 1); return <div key={i}><div className="mb-1 flex justify-between text-sm"><span className="font-medium">{i + 1}. {archers[0].stations[i]!.name}</span><span className="font-mono font-bold">{average} / 40</span></div><div className="h-3 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(average / Math.max(highest, 1)) * 100}%` }} /></div></div>})}</div></div>
-        <div className="rounded-xl border border-border bg-card p-5 sm:p-6"><p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">Lectura rápida</p><h2 className="mt-2 text-xl font-bold">Datos destacados</h2><div className="mt-5 divide-y divide-border">{[['Mejor estación', 'El Claro', '32 pts promedio'], ['Mayor precisión', 'La Duna', '78% de aciertos'], ['Ronda más exigente', 'La Reserva', '24 pts promedio'], ['Diferencia del podio', 'Alexis / Javier', '+27 puntos']].map(([label, value, detail]) => <div key={label} className="flex items-center justify-between gap-4 py-4"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-1 font-semibold">{value}</p></div><span className="text-right font-mono text-xs text-muted-foreground">{detail}</span></div>)}</div></div>
-      </section>
+  const round = allTournaments.findIndex((item) => item.id === tournament.id)
+  const participants = ranked.length
+  const roundScores = ranked
+    .map((archer) => (round >= 0 ? archer.scores[round] : archer.total) ?? 0)
+    .filter((score) => score > 0)
+  const average =
+    roundScores.length > 0
+      ? Math.round(roundScores.reduce((sum, score) => sum + score, 0) / roundScores.length)
+      : 0
 
-      <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">Clasificación general</p><h2 className="mt-2 text-xl font-bold">Resultados del torneo</h2></div><span className="text-sm text-muted-foreground">{tournamentStats.participants} participantes</span></div><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[650px] text-sm"><thead><tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground"><th className="px-3 py-3">Puesto</th><th className="px-3 py-3">Arquero</th><th className="px-3 py-3">División</th><th className="px-3 py-3">Promedio / estación</th><th className="px-3 py-3 text-right">Total</th></tr></thead><tbody>{ranked.map((archer, index) => <tr key={archer.name} className="border-b border-border last:border-0"><td className="px-3 py-4 font-mono font-bold">{index + 1}</td><td className="px-3 py-4 font-semibold">{archer.name}</td><td className="px-3 py-4 text-muted-foreground">{archer.division}</td><td className="px-3 py-4 font-mono">{Math.round(total(archer.scores) / tournament.stations)} pts</td><td className="px-3 py-4 text-right font-mono font-bold">{total(archer.scores)}</td></tr>)}</tbody></table></div></section>
+  return (
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[1400px] px-5 pb-20 pt-6 lg:px-10">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-primary"
+        >
+          <ArrowLeft className="size-4" /> Volver al scoreboard
+        </Link>
 
-      <section className="mt-10"><div className="mb-4 flex items-end justify-between"><div><p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">Control de recorrido</p><h2 className="mt-2 text-xl font-bold">Detalle de estaciones</h2></div><Target className="size-5 text-muted-foreground" /></div><div className="overflow-x-auto rounded-xl border border-border bg-card"><table className="w-full min-w-[950px] text-sm"><thead className="bg-secondary text-secondary-foreground"><tr>{['Estación', 'Blanco', 'Promedio', 'Mejor puntaje', 'Aciertos promedio', 'Dificultad'].map((heading) => <th key={heading} className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide">{heading}</th>)}</tr></thead><tbody>{Array.from({ length: tournament.stations }, (_, i) => { const station = archers[0].stations[i]!; const average = getStationAverage(i + 1); return <tr key={station.number} className="border-b border-border last:border-0"><td className="px-4 py-4 font-mono font-bold">{String(station.number).padStart(2, '0')}</td><td className="px-4 py-4"><div className="flex items-center gap-3"><AnimalImage animal={getAnimal(station.animalId)} alt={station.target} /><div><p className="font-semibold">{station.name}</p><p className="text-xs font-normal capitalize text-muted-foreground">{station.target} · {station.distancia} m · {station.altura}</p></div></div></td><td className="px-4 py-4 font-mono">{average} / 40</td><td className="px-4 py-4 font-mono">{Math.min(40, average + 8)} pts</td><td className="px-4 py-4 font-mono">{Math.round(average / 4)} / 5</td><td className="px-4 py-4"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${average >= 28 ? 'bg-accent text-foreground' : 'bg-muted text-muted-foreground'}`}>{average >= 28 ? 'Accesible' : 'Técnica'}</span></td></tr>})}</tbody></table></div></section>
-      <Link href="/" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Ver todos los torneos <ArrowUpRight className="size-4" /></Link>
-    </div>
-  </main>
+        <header className="mt-8 flex flex-col justify-between gap-6 border-b border-border pb-8 md:flex-row md:items-end">
+          <div>
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-primary">
+              Detalle del torneo
+            </p>
+            <h1 className="mt-2 max-w-3xl text-balance text-4xl font-extrabold tracking-tight sm:text-5xl">
+              {tournament.name}
+            </h1>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+              {tournament.dateLabel && (
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays className="size-4 text-primary" />
+                  {tournament.dateLabel}
+                </span>
+              )}
+              {tournament.type && <span>{tournament.type}</span>}
+            </div>
+          </div>
+          <div className="rounded-xl bg-secondary p-5 text-secondary-foreground">
+            <Trophy className="size-6 text-primary" />
+            <p className="mt-4 font-mono text-3xl font-bold">{participants}</p>
+            <p className="text-sm opacity-80">arqueros con planilla</p>
+          </div>
+        </header>
+
+        <section aria-label="Resumen del torneo" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ['Promedio general', average > 0 ? `${average} pts` : '—', 'por arquero con puntaje'],
+            ['Estaciones', String(tournament.stationCount || stations.length), 'blancos 3D'],
+            ['Vueltas', String(tournament.laps), 'del circuito'],
+            ['Planillas', String(participants), 'cargadas'],
+          ].map(([label, value, detail]) => (
+            <div key={label} className="rounded-xl border border-border bg-card p-5">
+              <p className="text-sm text-muted-foreground">{label}</p>
+              <p className="mt-2 font-mono text-3xl font-bold tracking-tight">{value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+            </div>
+          ))}
+        </section>
+
+        {ranked.length > 0 && (
+          <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
+                  Clasificación
+                </p>
+                <h2 className="mt-2 text-xl font-bold">Resultados del torneo</h2>
+              </div>
+              <span className="text-sm text-muted-foreground">{participants} participantes</span>
+            </div>
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[650px] text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="px-3 py-3">Puesto</th>
+                    <th className="px-3 py-3">Arquero</th>
+                    <th className="px-3 py-3">División</th>
+                    <th className="px-3 py-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ranked.map((archer, index) => {
+                    const score = round >= 0 ? archer.scores[round] : archer.total
+                    return (
+                      <tr key={archer.id} className="border-b border-border last:border-0">
+                        <td className="px-3 py-4 font-mono font-bold">{index + 1}</td>
+                        <td className="px-3 py-4 font-semibold">{archer.name}</td>
+                        <td className="px-3 py-4 text-muted-foreground">{archer.division}</td>
+                        <td className="px-3 py-4 text-right font-mono font-bold">
+                          {score && score > 0 ? score : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        <section className="mt-10">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
+                Control de recorrido
+              </p>
+              <h2 className="mt-2 text-xl font-bold">Detalle de estaciones</h2>
+            </div>
+            <Target className="size-5 text-muted-foreground" />
+          </div>
+          {stations.length === 0 ? (
+            <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">
+              Este torneo todavía no tiene estaciones cargadas.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <table className="w-full min-w-[650px] text-sm">
+                <thead className="bg-secondary text-secondary-foreground">
+                  <tr>
+                    {['Estación', 'Blanco', 'Distancia', 'Altura'].map((heading) => (
+                      <th
+                        key={heading}
+                        className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide"
+                      >
+                        {heading}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {stations.map((station) => (
+                    <tr key={station.number} className="border-b border-border last:border-0">
+                      <td className="px-4 py-4 font-mono font-bold">
+                        {String(station.number).padStart(2, '0')}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <AnimalImage animal={station.animal} alt={station.animal?.tipo} />
+                          <div>
+                            <p className="font-semibold capitalize">
+                              {station.animal?.tipo ?? 'Blanco 3D'}
+                            </p>
+                            <p className="text-xs font-normal capitalize text-muted-foreground">
+                              {station.animal?.superficie ?? '—'}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 font-mono">{station.distance} m</td>
+                      <td className="px-4 py-4 capitalize text-muted-foreground">{station.height}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  )
 }

@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Search, X, ArrowUpRight } from 'lucide-react'
 import type { RankingArcher, RankingDivision, SeasonInfo, } from '@/lib/types/ranking'
-import  { getTournamentEntries } from '@/lib/ranking'
+import { getTournamentEntries, type TournamentHistoryEntry } from '@/lib/ranking'
 
 const categories = ['Tradicional', 'Raso', 'Longbow', 'Cazador']
 
@@ -56,28 +56,6 @@ export function Scoreboard({ entries, season }: ScoreboardProps) {
     return groupByDivision(filtered)
   }, [entries, category, query])
 
-  function TournamentEntriesList({ archer }: { archer: number }) {
-    const [entries, setEntries] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-  
-    console.log("gedasda")
-    // useEffect(() => {
-    //   async function loadData() {
-    //     try {
-    //       setLoading(true)
-    //       const data = await getTournamentEntries(arqueroId)
-    //       setEntries(data)
-    //     } catch (err: any) {
-    //       setError(err.message)
-    //     } finally {
-    //       setLoading(false)
-    //     }
-    //   }
-  
-    //   loadData()
-    // }, [arqueroId])
-  }
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-black text-white">
@@ -237,6 +215,79 @@ function DivisionTable({
   )
 }
 
+function ArcherHistory({ archerId, archerSlug }: { archerId: string, archerSlug: string }) {
+  const [entries, setEntries] = useState<TournamentHistoryEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadData() {
+      try {
+        const data = await getTournamentEntries(archerId)
+        console.log("data", data)
+        if (!active) return
+        setEntries(data)
+      } catch {
+        if (!active) return
+        setEntries([])
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadData()
+
+    return () => {
+      active = false
+    }
+  }, [archerId])
+
+  if (loading) {
+    return <p className="mt-3 text-sm text-muted-foreground">Cargando historial...</p>
+  }
+
+  if (entries.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="mt-8">
+      <h3 className="font-bold">Historial de torneos</h3>
+      <div className="mt-3 space-y-3">
+        {entries.map((entry) => {
+          const label = entry.tournamentName ?? `Torneo #${entry.torneo_id ?? entry.id}`
+          const detail = entry.tournamentDate ? `${entry.tournamentDate}` : 'Ver planilla'
+          const scoreText = typeof entry.total === 'number' ? `${entry.total} pts` : 'Ver planilla'
+          const hasLink = typeof entry.tournamentSlug === 'string' && entry.tournamentSlug.trim().length > 0
+
+          const content = (
+            <div className="flex items-center justify-between gap-4 rounded-xl border-2 border-primary/50 p-4 transition hover:border-primary hover:bg-accent">
+              <div>
+                <p className="font-semibold">{label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{detail} · {scoreText}</p>
+              </div>
+              <ArrowUpRight className="size-4 text-foreground" />
+            </div>
+          )
+
+          if (!hasLink) {
+            return <div key={entry.id}>{content}</div>
+          }
+
+          return (
+            <Link key={entry.id} href={`${archerSlug}/${entry.tournamentSlug}`}>
+              {content}
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function ArcherPanel({ archer, onClose }: { archer: RankingArcher; onClose: () => void }) {
   return (
     <div
@@ -277,23 +328,7 @@ function ArcherPanel({ archer, onClose }: { archer: RankingArcher; onClose: () =
             <p className="mt-1 text-lg font-bold">{archer.division}</p>
           </div>
         </div>
-        <div className="mt-8">
-          <h3 className="font-bold">Historial de torneos</h3>
-          {archer.scores[0] != null ? (
-            <Link
-              href={`/${archer.slug}/fecha1`}
-              className="mt-3 flex items-center justify-between rounded-xl border-2 border-primary/50 p-4 transition hover:border-primary hover:bg-accent"
-            >
-              <div>
-                <p className="font-semibold">1ª Fecha</p>
-                <p className="mt-1 text-xs text-muted-foreground">{archer.scores[0]} pts · Ver planilla</p>
-              </div>
-              <ArrowUpRight className="size-4 text-foreground" />
-            </Link>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">Sin fechas cargadas todavía.</p>
-          )}
-        </div>
+        <ArcherHistory archerId={archer.id} archerSlug={archer.slug} />
       </aside>
     </div>
   )
