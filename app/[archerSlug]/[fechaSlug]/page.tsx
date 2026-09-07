@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
 import { TiroStatChart } from '@/components/TiroStatChart'
+import { ResumenDistancias } from '@/components/ResumenDistancias'
+import { groupStationsByDistance } from '@/lib/archery/categoryDistance'
 import {
   getArcherBySlug,
   getArcherPlanilla,
@@ -87,7 +89,8 @@ console.log(contadorPuntajes);
 
 
   const total = tirosEstaciones.reduce((max, tiro) => Math.max(max, tiro.acumulado), 0) || 0;
-  
+  const estacionesCategorizadas = groupStationsByDistance(stations)
+  console.log("estacionesCategorizadas",estacionesCategorizadas)
 
   return (
     <main className="min-h-screen bg-background">
@@ -155,7 +158,7 @@ console.log(contadorPuntajes);
               <table className="w-full min-w-[700px] border-collapse text-sm">
                 <thead className="bg-secondary text-secondary-foreground">
                   <tr>
-                    {['Estación', 'Blanco','Tamaño', 'Distancia', 'Altura', '1 tiro', '2 tiro', 'Parcial', 'Acumulado'].map((heading) => (
+                    {['Estación', 'Blanco','Tamaño', 'Distancia', 'Altura', '1º tiro', '2º tiro', 'Parcial', 'Acumulado'].map((heading) => (
                       <th
                         key={heading}
                         className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide"
@@ -197,7 +200,7 @@ console.log(contadorPuntajes);
 
                       {/* 1 tiro */}
                       <td className="px-4 py-4 font-mono font-medium">
-                        {tiro.tiro1 === 0 ? "M" : tiro.tiro1}
+                        {tiro.tiro1 === 0 ? "M" : tiro.tiro1 }
                       </td>
 
                       {/* 2 tiro */}
@@ -222,9 +225,26 @@ console.log(contadorPuntajes);
           )}
         </section>
 
-        <section className="mt-10">
-
+        <section className="mt-10 mt-8 border-b border-border pb-8">
           <TiroStatChart contadorPuntajes={contadorPuntajes} />
+        </section>
+
+        <section className="mt-10">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
+                Tus datos
+              </p>
+              <h2 className="mt-2 text-2xl font-bold">
+                Rangos de distancia
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                XXXXXX
+              </p>
+            </div>
+            <Target className="size-5 text-muted-foreground" />
+          </div>
+          <ResumenDistancias stations={stations} />
         </section>
         
      

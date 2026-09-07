@@ -95,6 +95,7 @@ export function TiroStatChart({ contadorPuntajes }: TiroStatChartProps) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
               {/* Mostramos el porcentaje al final de cada barra */}
+            
               <LabelList 
                 dataKey="percentage" 
                 position="right" 
