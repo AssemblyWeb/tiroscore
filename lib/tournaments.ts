@@ -1,1 +1,1 @@
-export type { Animal, CourseStation, Tournament } from '@/lib/types/ranking'
+export type { Animal, CourseStation, Tournament, TiroEstacionHeader } from '@/lib/types/ranking'

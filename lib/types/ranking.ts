@@ -53,3 +53,11 @@ export type PlanillaHeader = {
   division: string | null
   className: string | null
 }
+
+export type TiroEstacionHeader = {
+  id: number
+  tiro1: number | null
+  tiro2: number | null
+  parcial: number | null
+  acumulado: number | null
+}

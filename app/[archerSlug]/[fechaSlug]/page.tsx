@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
+import { TiroStatChart } from '@/components/TiroStatChart'
 import {
   getArcherBySlug,
   getArcherPlanilla,
   getTournamentById,
   getTournamentStations,
   getTournamentsOrdered,
+  getTirosEstacionesByPlanillaId,
 } from '@/lib/ranking'
 
 export default async function ArcherTournamentPage({
@@ -32,6 +34,7 @@ export default async function ArcherTournamentPage({
     getTournamentStations(tournament.id),
   ])
 
+  // check for planilla call
   if (!planilla) {
     return (
       <main className="mx-auto min-h-screen max-w-3xl px-5 py-16">
@@ -46,17 +49,46 @@ export default async function ArcherTournamentPage({
     )
   }
 
-  const round = tournaments.findIndex((item) => item.id === tournament.id)
-  const total = round >= 0 ? archer.scores[round] : archer.total
-console.log("archer", archer)
-console.log("tournament", tournament)
-console.log("planilla", planilla)
-console.log("stations", stations)
-console.log("round", round)
-console.log("total", total)
-console.log("tournaments", tournaments)
-console.log("tournament.id", tournament.id)
-console.log("tournament.name", tournament.name)
+  const tirosEstaciones = await getTirosEstacionesByPlanillaId(planilla.id);
+
+  const puntajesBuscados = [0, 5, 8, 10, 11];
+
+  // Inicializar el contador para cada puntaje de interés
+  const contadorPuntajes = puntajesBuscados.reduce((acc, puntos) => {
+    acc[puntos] = 0;
+    return acc;
+  }, {});
+
+  // Recorrer todas las rondas y evaluar tanto el tiro1 como el tiro2 de forma independiente
+  tirosEstaciones.forEach((tiro) => {
+    const tirosRealizados = [tiro.tiro1, tiro.tiro2];
+    
+    tirosRealizados.forEach((puntos) => {
+      if (contadorPuntajes[puntos] !== undefined) {
+        contadorPuntajes[puntos]++;
+      }
+    });
+  });
+
+// Resultado: { '0': X, '5': X, '8': X, '10': X, '11': X }
+console.log(contadorPuntajes);
+  // Encontrar el índice de inicio en el array de stations (asumiendo que 'number' va del 1 al 12)
+  const startIndex = stations.findIndex(s => s.number === planilla.startingStation);
+
+  const tirosConEstaciones = tirosEstaciones.map((tiro, index) => {
+    // Como son 24 tiros para 12 estaciones, cada estación abarca 2 posiciones consecutivas
+    const stationIndex = (startIndex + index) % stations.length;
+
+    return {
+      ...tiro,
+      station: stations[stationIndex] // Inyecta la info de la estación correspondiente
+    };
+  });
+
+
+  const total = tirosEstaciones.reduce((max, tiro) => Math.max(max, tiro.acumulado), 0) || 0;
+  
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1400px] px-4 pb-20 pt-6 sm:px-6 lg:px-10">
@@ -87,7 +119,7 @@ console.log("tournament.name", tournament.name)
             </div>
           </div>
           <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Info label="Fecha" value={tournament.dateLabel} icon={<CalendarDays className="size-4" />} />
+            <Info label={String(tournament.name)} value={tournament.dateLabel} icon={<CalendarDays className="size-4" />} />
             {planilla.patrol != null && <Info label="Patrulla" value={String(planilla.patrol)} />}
             {planilla.startingStation != null && (
               <Info label="Inicio" value={`Estación ${planilla.startingStation}`} />
@@ -106,8 +138,10 @@ console.log("tournament.name", tournament.name)
               </p>
               <h2 className="mt-2 text-2xl font-bold">
                 {tournament.stationCount || stations.length} estaciones
-                {tournament.laps > 1 ? ` · ${tournament.laps} vueltas` : ''}
               </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {tournament.type}
+              </p>
             </div>
             <Target className="size-5 text-muted-foreground" />
           </div>
@@ -121,7 +155,7 @@ console.log("tournament.name", tournament.name)
               <table className="w-full min-w-[700px] border-collapse text-sm">
                 <thead className="bg-secondary text-secondary-foreground">
                   <tr>
-                    {['Estación', 'Blanco 3D', 'Distancia', 'Altura'].map((heading) => (
+                    {['Estación', 'Blanco','Tamaño', 'Distancia', 'Altura', '1 tiro', '2 tiro', 'Parcial', 'Acumulado'].map((heading) => (
                       <th
                         key={heading}
                         className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide"
@@ -131,27 +165,55 @@ console.log("tournament.name", tournament.name)
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {stations.map((station) => (
-                    <tr key={station.number} className="border-b border-border last:border-0">
+              <tbody className="divide-y divide-border">
+                  {tirosConEstaciones.map((tiro, index) => (
+                    <tr key={tiro.id ?? index} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                      {/* Estación */}
                       <td className="px-4 py-4 font-mono font-bold">
-                        {String(station.number).padStart(2, '0')}
+                        {String(tiro.station?.number ?? index + 1).padStart(2, '0')}
                       </td>
+
+                      {/* Blanco (Imagen y Nombre) */}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <AnimalImage animal={station.animal} size="md" />
-                          <div>
-                            <p className="font-semibold capitalize">
-                              {station.animal?.tipo ?? 'Blanco 3D'}
-                            </p>
-                            <p className="text-xs capitalize text-muted-foreground">
-                              {station.animal?.superficie ?? '—'}
-                            </p>
-                          </div>
+                          <AnimalImage animal={tiro.station?.animal} alt={tiro.station?.animal?.tipo} size="md"/>
                         </div>
                       </td>
-                      <td className="px-4 py-4 font-mono">{station.distance} m</td>
-                      <td className="px-4 py-4 capitalize text-muted-foreground">{station.height}</td>
+
+                      {/* Tamaño (Asumiendo que viene en la estación o animal, lo dejamos defensivo) */}
+                      <td className="px-4 py-4 capitalize text-muted-foreground">
+                        {tiro.station?.animal?.superficie ?? '—'}
+                      </td>
+
+                      {/* Distancia */}
+                      <td className="px-4 py-4 font-mono">
+                        {tiro.station?.distance ? `${tiro.station.distance} m` : '—'}
+                      </td>
+
+                      {/* Altura */}
+                      <td className="px-4 py-4 capitalize text-muted-foreground">
+                        {tiro.station?.height ?? '—'}
+                      </td>
+
+                      {/* 1 tiro */}
+                      <td className="px-4 py-4 font-mono font-medium">
+                        {tiro.tiro1 === 0 ? "M" : tiro.tiro1}
+                      </td>
+
+                      {/* 2 tiro */}
+                      <td className="px-4 py-4 font-mono font-medium">
+                        {tiro.tiro2 === 0 ? "M" : tiro.tiro2}
+                      </td>
+
+                      {/* Parcial */}
+                      <td className="px-4 py-4 font-mono font-semibold">
+                        {tiro.parcial}
+                      </td>
+
+                      {/* Acumulado */}
+                      <td className="px-4 py-4 font-mono font-bold text-primary">
+                        {tiro.acumulado}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -160,16 +222,18 @@ console.log("tournament.name", tournament.name)
           )}
         </section>
 
-        <p className="mt-6 rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
-          El detalle de flechas por estación todavía no está cargado en la base. El circuito y el total
-          de la fecha sí vienen de Supabase.
-        </p>
-        <Link
+        <section className="mt-10">
+
+          <TiroStatChart contadorPuntajes={contadorPuntajes} />
+        </section>
+        
+     
+        {/* <Link
           href={`/torneos/${tournament.id}`}
           className="mt-4 inline-flex rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold hover:bg-accent"
         >
           Ver estadísticas del torneo
-        </Link>
+        </Link> */}
       </div>
     </main>
   )

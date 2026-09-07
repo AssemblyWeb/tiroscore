@@ -7,6 +7,7 @@ import type {
   RankingArcher,
   SeasonInfo,
   Tournament,
+  TiroEstacionHeader,
 } from '@/lib/types/ranking'
 
 type ArqueroRow = {
@@ -304,6 +305,29 @@ export async function getArcherPlanilla(archerId: number, tournamentId: string) 
 
   return header
 }
+export async function getTirosEstacionesByPlanillaId(planillaId: number) {
+  const supabase = createSupabaseClient()
+  
+  const { data, error } = await supabase
+    .from('tiros_estaciones')
+    .select('id, planilla_id, tiro_1, tiro_2, parcial, acumulado')
+    .eq('planilla_id', Number(planillaId))
+    .order('id', { ascending: true }); 
+    
+  if (error) throw error
+  if (!data) return null
+
+  const header = data.map((row) => ({
+    id: row.id,
+    tiro1: row.tiro_1,
+    tiro2: row.tiro_2,
+    parcial: row.parcial,
+    acumulado: row.acumulado,
+  }))
+
+  return header
+}
+
 
 export function getSeasonInfo(): SeasonInfo {
   return DEFAULT_SEASON
