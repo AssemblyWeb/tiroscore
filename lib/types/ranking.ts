@@ -61,3 +61,11 @@ export type TiroEstacionHeader = {
   parcial: number | null
   acumulado: number | null
 }
+
+export type CategoryDistance = 'cortas' | 'medias' | 'largas'
+
+export type EstacionesPorDistancia = {
+  cortas: CourseStation[]
+  medias: CourseStation[]
+  largas: CourseStation[]
+}

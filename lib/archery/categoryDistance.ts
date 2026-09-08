@@ -1,12 +1,4 @@
-import type { CourseStation } from '@/lib/types/ranking' // Ajustá la ruta según tus tipos
-
-export type CategoryDistance = 'cortas' | 'medias' | 'largas'
-
-export type EstacionesPorDistancia = {
-  cortas: CourseStation[]
-  medias: CourseStation[]
-  largas: CourseStation[]
-}
+import type { CourseStation, EstacionesPorDistancia } from '@/lib/types/ranking' 
 
 /**
  * Categoriza las estaciones de tiro en cortas, medias y largas según su distancia.

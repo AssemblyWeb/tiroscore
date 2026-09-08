@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
 import { TiroStatChart } from '@/components/TiroStatChart'
-import { ResumenDistancias } from '@/components/ResumenDistancias'
+import { ResumenDistanciasCharts } from '@/components/resumen-distancias-charts'
 import { groupStationsByDistance } from '@/lib/archery/categoryDistance'
+import { ResumenAlturasCharts } from '@/components/resumen-alturas-charts'
+import type { CourseStation } from "@/lib/types/ranking"
 import {
   getArcherBySlug,
   getArcherPlanilla,
@@ -90,7 +92,17 @@ console.log(contadorPuntajes);
 
   const total = tirosEstaciones.reduce((max, tiro) => Math.max(max, tiro.acumulado), 0) || 0;
   const estacionesCategorizadas = groupStationsByDistance(stations)
+
+  // Transformamos el objeto complejo al formato plano que requiere el componente de estaciones
+  const stationsFormat: CourseStation[] = tirosConEstaciones.map((item: any) => ({
+    number: item.station.number,
+    distance: item.station.distance,
+    height: item.station.height,
+    tiro1: item.tiro1,
+    tiro2: item.tiro2,
+  }))
   console.log("estacionesCategorizadas",estacionesCategorizadas)
+  console.log("tirosConEstaciones",tirosConEstaciones)
 
   return (
     <main className="min-h-screen bg-background">
@@ -137,7 +149,7 @@ console.log(contadorPuntajes);
           <div className="mb-4 flex items-end justify-between">
             <div>
               <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
-                Recorrido
+                Tu recorrido
               </p>
               <h2 className="mt-2 text-2xl font-bold">
                 {tournament.stationCount || stations.length} estaciones
@@ -239,12 +251,38 @@ console.log(contadorPuntajes);
                 Rangos de distancia
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                XXXXXX
+                Distribución de puntajes según la distancia del tiro (alta, media y larga)
               </p>
             </div>
             <Target className="size-5 text-muted-foreground" />
           </div>
-          <ResumenDistancias stations={stations} />
+
+          <ResumenDistanciasCharts 
+            stations={stationsFormat} 
+            className="w-full" 
+          />
+
+        </section>
+        <section className="mt-10">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
+                Tus datos
+              </p>
+              <h2 className="mt-2 text-2xl font-bold">
+                Rangos de altura
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Distribución de puntajes según la elevación del tiro (bajos, llanos y altos)
+              </p>
+            </div>
+            <Target className="size-5 text-muted-foreground" />
+          </div>
+        
+          <ResumenAlturasCharts 
+            stations={stationsFormat} 
+            className="w-full" 
+          />
         </section>
         
      

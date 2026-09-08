@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { CourseStation } from "@/lib/types/ranking"
-import { groupStationsByDistance, type EstacionesPorDistancia } from "@/lib/archery/categoryDistance"
+import type { CourseStation, EstacionesPorDistancia } from "@/lib/types/ranking"
+import { groupStationsByDistance } from "@/lib/archery/categoryDistance"
 
 type ResumenDistanciasProps = {
   stations: CourseStation[]
