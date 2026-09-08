@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
 import { TiroStatChart } from '@/components/TiroStatChart'
-import { ResumenDistanciasCharts } from '@/components/resumen-distancias-charts'
 import { groupStationsByDistance } from '@/lib/archery/categoryDistance'
+import { ResumenDistanciasCharts } from '@/components/resumen-distancias-charts'
 import { ResumenAlturasCharts } from '@/components/resumen-alturas-charts'
+import { ResumenSuperficiesCharts } from '@/components/resumen-superficies-charts'
 import type { CourseStation } from "@/lib/types/ranking"
 import {
   getArcherBySlug,
@@ -98,6 +99,7 @@ console.log(contadorPuntajes);
     number: item.station.number,
     distance: item.station.distance,
     height: item.station.height,
+    superficie: item.station.animal.superficie,
     tiro1: item.tiro1,
     tiro2: item.tiro2,
   }))
@@ -240,7 +242,7 @@ console.log(contadorPuntajes);
         <section className="mt-10 mt-8 border-b border-border pb-8">
           <TiroStatChart contadorPuntajes={contadorPuntajes} />
         </section>
-
+          {/* distancia */}
         <section className="mt-10">
           <div className="mb-4 flex items-end justify-between">
             <div>
@@ -263,12 +265,10 @@ console.log(contadorPuntajes);
           />
 
         </section>
-        <section className="mt-10">
+        {/* altura */}
+        <section className="mt-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
-              <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
-                Tus datos
-              </p>
               <h2 className="mt-2 text-2xl font-bold">
                 Rangos de altura
               </h2>
@@ -284,7 +284,25 @@ console.log(contadorPuntajes);
             className="w-full" 
           />
         </section>
+         {/* superficie */}
+         <section className="mt-5">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="mt-2 text-2xl font-bold">
+                Rangos de superficie
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Distribución de puntajes según la elevación del tiro (bajos, llanos y altos)
+              </p>
+            </div>
+            <Target className="size-5 text-muted-foreground" />
+          </div>
         
+          <ResumenSuperficiesCharts 
+            stations={stationsFormat} 
+            className="w-full" 
+          />
+        </section>
      
         {/* <Link
           href={`/torneos/${tournament.id}`}
