@@ -7,6 +7,11 @@ import { groupStationsByDistance } from '@/lib/archery/categoryDistance'
 import { ResumenDistanciasCharts } from '@/components/resumen-distancias-charts'
 import { ResumenAlturasCharts } from '@/components/resumen-alturas-charts'
 import { ResumenSuperficiesCharts } from '@/components/resumen-superficies-charts'
+import { ComparativaTotalChart } from '@/components/comparativa-total-cards'
+import { ComparativaDetalladaChart } from "@/components/comparativa-detallada-chart"
+import { Resumen } from "@/components/resumen"
+import { EstacionesChart } from "@/components/EstacionesChart"
+import { obtenerTotalesPorVuelta } from "@/lib/archery/obtenerTotalesPorVuelta"
 import type { CourseStation } from "@/lib/types/ranking"
 import {
   getArcherBySlug,
@@ -23,6 +28,8 @@ export default async function ArcherTournamentPage({
   params: Promise<{ archerSlug: string; fechaSlug: string }>
 }) {
   const { archerSlug, fechaSlug } = await params
+  
+  // 1. Obtener datos principales del arquero y torneo
   const archer = await getArcherBySlug(archerSlug)
   if (!archer) notFound()
 
@@ -34,12 +41,13 @@ export default async function ArcherTournamentPage({
 
   if (!tournament) notFound()
 
+  // 2. Obtener planilla y estaciones en paralelo
   const [planilla, stations] = await Promise.all([
     getArcherPlanilla(Number(archer.id), tournament.id),
     getTournamentStations(tournament.id),
   ])
 
-  // check for planilla call
+  // Validación si el arquero no cargó planilla para este torneo
   if (!planilla) {
     return (
       <main className="mx-auto min-h-screen max-w-3xl px-5 py-16">
@@ -54,47 +62,45 @@ export default async function ArcherTournamentPage({
     )
   }
 
-  const tirosEstaciones = await getTirosEstacionesByPlanillaId(planilla.id);
+  const tirosEstaciones = await getTirosEstacionesByPlanillaId(planilla.id)
 
-  const puntajesBuscados = [0, 5, 8, 10, 11];
+  // ==========================================
+  // PROCESAMIENTO DE DATOS Y ESTADÍSTICAS
+  // ==========================================
 
-  // Inicializar el contador para cada puntaje de interés
+  // Conteo de frecuencia de cada puntaje (0, 5, 8, 10, 11) en todos los tiros realizados
+  const puntajesBuscados = [0, 5, 8, 10, 11]
   const contadorPuntajes = puntajesBuscados.reduce((acc, puntos) => {
-    acc[puntos] = 0;
-    return acc;
-  }, {});
+    acc[puntos] = 0
+    return acc
+  }, {} as Record<number, number>)
 
-  // Recorrer todas las rondas y evaluar tanto el tiro1 como el tiro2 de forma independiente
   tirosEstaciones.forEach((tiro) => {
-    const tirosRealizados = [tiro.tiro1, tiro.tiro2];
-    
+    const tirosRealizados = [tiro.tiro1, tiro.tiro2]
     tirosRealizados.forEach((puntos) => {
       if (contadorPuntajes[puntos] !== undefined) {
-        contadorPuntajes[puntos]++;
+        contadorPuntajes[puntos]++
       }
-    });
-  });
+    })
+  })
 
-// Resultado: { '0': X, '5': X, '8': X, '10': X, '11': X }
-console.log(contadorPuntajes);
-  // Encontrar el índice de inicio en el array de stations (asumiendo que 'number' va del 1 al 12)
-  const startIndex = stations.findIndex(s => s.number === planilla.startingStation);
-
+  // Sincronización de estaciones: asocia cada tiro con su estación correspondiente 
+  // teniendo en cuenta la estación de inicio (startingStation) del arquero.
+  const startIndex = stations.findIndex(s => s.number === planilla.startingStation)
   const tirosConEstaciones = tirosEstaciones.map((tiro, index) => {
-    // Como son 24 tiros para 12 estaciones, cada estación abarca 2 posiciones consecutivas
-    const stationIndex = (startIndex + index) % stations.length;
-
+    const stationIndex = (startIndex + index) % stations.length
     return {
       ...tiro,
-      station: stations[stationIndex] // Inyecta la info de la estación correspondiente
-    };
-  });
+      station: stations[stationIndex],
+    }
+  })
 
-
-  const total = tirosEstaciones.reduce((max, tiro) => Math.max(max, tiro.acumulado), 0) || 0;
+  // Obtención de métricas globales y por vuelta
+  const total = tirosEstaciones.reduce((max, tiro) => Math.max(max, tiro.acumulado), 0) || 0
   const estacionesCategorizadas = groupStationsByDistance(stations)
+  const { totalVuelta1, totalVuelta2 } = obtenerTotalesPorVuelta(tirosConEstaciones)
 
-  // Transformamos el objeto complejo al formato plano que requiere el componente de estaciones
+  // Formato plano necesario para los componentes de gráficos de resumen (distancia, altura, superficie)
   const stationsFormat: CourseStation[] = tirosConEstaciones.map((item: any) => ({
     number: item.station.number,
     distance: item.station.distance,
@@ -103,12 +109,12 @@ console.log(contadorPuntajes);
     tiro1: item.tiro1,
     tiro2: item.tiro2,
   }))
-  console.log("estacionesCategorizadas",estacionesCategorizadas)
-  console.log("tirosConEstaciones",tirosConEstaciones)
 
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1400px] px-4 pb-20 pt-6 sm:px-6 lg:px-10">
+        
+        {/* Enlace de navegación superior */}
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-primary"
@@ -116,6 +122,7 @@ console.log(contadorPuntajes);
           <ArrowLeft className="size-4" /> Volver al scoreboard
         </Link>
 
+        {/* Encabezado con información general del arquero y puntaje total */}
         <header className="mt-8 border-b border-border pb-8">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
@@ -147,6 +154,7 @@ console.log(contadorPuntajes);
           </div>
         </header>
 
+        {/* Tabla de recorrido estación por estación */}
         <section className="mt-10">
           <div className="mb-4 flex items-end justify-between">
             <div>
@@ -156,7 +164,7 @@ console.log(contadorPuntajes);
               <h2 className="mt-2 text-2xl font-bold">
                 {tournament.stationCount || stations.length} estaciones
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {tournament.type}
               </p>
             </div>
@@ -172,7 +180,7 @@ console.log(contadorPuntajes);
               <table className="w-full min-w-[700px] border-collapse text-sm">
                 <thead className="bg-secondary text-secondary-foreground">
                   <tr>
-                    {['Estación', 'Blanco','Tamaño', 'Distancia', 'Altura', '1º tiro', '2º tiro', 'Parcial', 'Acumulado'].map((heading) => (
+                    {['Estación', 'Blanco', 'Tamaño', 'Distancia', 'Altura', '1º tiro', '2º tiro', 'Parcial', 'Acumulado'].map((heading) => (
                       <th
                         key={heading}
                         className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide"
@@ -182,52 +190,35 @@ console.log(contadorPuntajes);
                     ))}
                   </tr>
                 </thead>
-              <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border">
                   {tirosConEstaciones.map((tiro, index) => (
-                    <tr key={tiro.id ?? index} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-                      {/* Estación */}
+                    <tr key={tiro.id ?? index} className="border-b border-border last:border-0 transition-colors hover:bg-muted/50">
                       <td className="px-4 py-4 font-mono font-bold">
                         {String(tiro.station?.number ?? index + 1).padStart(2, '0')}
                       </td>
-
-                      {/* Blanco (Imagen y Nombre) */}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <AnimalImage animal={tiro.station?.animal} alt={tiro.station?.animal?.tipo} size="md"/>
+                          <AnimalImage animal={tiro.station?.animal} alt={tiro.station?.animal?.tipo} size="md" />
                         </div>
                       </td>
-
-                      {/* Tamaño (Asumiendo que viene en la estación o animal, lo dejamos defensivo) */}
                       <td className="px-4 py-4 capitalize text-muted-foreground">
                         {tiro.station?.animal?.superficie ?? '—'}
                       </td>
-
-                      {/* Distancia */}
                       <td className="px-4 py-4 font-mono">
                         {tiro.station?.distance ? `${tiro.station.distance} m` : '—'}
                       </td>
-
-                      {/* Altura */}
                       <td className="px-4 py-4 capitalize text-muted-foreground">
                         {tiro.station?.height ?? '—'}
                       </td>
-
-                      {/* 1 tiro */}
                       <td className="px-4 py-4 font-mono font-medium">
-                        {tiro.tiro1 === 0 ? "M" : tiro.tiro1 }
+                        {tiro.tiro1 === 0 ? "M" : tiro.tiro1}
                       </td>
-
-                      {/* 2 tiro */}
                       <td className="px-4 py-4 font-mono font-medium">
                         {tiro.tiro2 === 0 ? "M" : tiro.tiro2}
                       </td>
-
-                      {/* Parcial */}
                       <td className="px-4 py-4 font-mono font-semibold">
                         {tiro.parcial}
                       </td>
-
-                      {/* Acumulado */}
                       <td className="px-4 py-4 font-mono font-bold text-primary">
                         {tiro.acumulado}
                       </td>
@@ -239,10 +230,12 @@ console.log(contadorPuntajes);
           )}
         </section>
 
-        <section className="mt-10 mt-8 border-b border-border pb-8">
+        {/* Gráfico de estadísticas generales de tiros */}
+        <section className="mt-10 border-b border-border pb-8">
           <TiroStatChart contadorPuntajes={contadorPuntajes} />
         </section>
-          {/* distancia */}
+
+        {/* Rangos de distancia */}
         <section className="mt-10">
           <div className="mb-4 flex items-end justify-between">
             <div>
@@ -252,64 +245,83 @@ console.log(contadorPuntajes);
               <h2 className="mt-2 text-2xl font-bold">
                 Rangos de distancia
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Distribución de puntajes según la distancia del tiro (alta, media y larga)
               </p>
             </div>
-            <Target className="size-5 text-muted-foreground" />
           </div>
-
-          <ResumenDistanciasCharts 
-            stations={stationsFormat} 
-            className="w-full" 
-          />
-
+          <ResumenDistanciasCharts stations={stationsFormat} className="w-full" />
         </section>
-        {/* altura */}
+
+        {/* Rangos de altura */}
         <section className="mt-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <h2 className="mt-2 text-2xl font-bold">
                 Rangos de altura
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Distribución de puntajes según la elevación del tiro (bajos, llanos y altos)
               </p>
             </div>
-            <Target className="size-5 text-muted-foreground" />
           </div>
-        
-          <ResumenAlturasCharts 
-            stations={stationsFormat} 
-            className="w-full" 
-          />
+          <ResumenAlturasCharts stations={stationsFormat} className="w-full" />
         </section>
-         {/* superficie */}
-         <section className="mt-5">
+
+        {/* Rangos de superficie */}
+        <section className="mt-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <h2 className="mt-2 text-2xl font-bold">
                 Rangos de superficie
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Distribución de puntajes según la elevación del tiro (bajos, llanos y altos)
+              <p className="mt-1 text-sm text-muted-foreground">
+                Distribución de puntajes según la superficie del blanco
               </p>
             </div>
-            <Target className="size-5 text-muted-foreground" />
           </div>
-        
-          <ResumenSuperficiesCharts 
-            stations={stationsFormat} 
-            className="w-full" 
-          />
+          <ResumenSuperficiesCharts stations={stationsFormat} className="w-full" />
         </section>
-     
-        {/* <Link
-          href={`/torneos/${tournament.id}`}
-          className="mt-4 inline-flex rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold hover:bg-accent"
-        >
-          Ver estadísticas del torneo
-        </Link> */}
+
+        {/* Comparativa 1ra y 2da vuelta */}
+        <section className="mt-5">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="mt-2 text-2xl font-bold">
+                Comparativas por vueltas
+              </h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+            <ComparativaTotalChart totalVuelta1={totalVuelta1} totalVuelta2={totalVuelta2} />
+            <ComparativaDetalladaChart tirosConEstaciones={tirosConEstaciones} />
+          </div>
+        </section>
+
+        {/* Rendimiento detallado por estación */}
+        <section className="mt-5">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="mt-2 text-2xl font-bold">
+                Rendimiento detallado por estación
+              </h2>
+            </div>
+          </div>
+          <EstacionesChart tirosConEstaciones={tirosConEstaciones} />
+        </section>
+
+        {/* Resumen final */}
+        <section className="mt-5">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="mt-2 text-2xl font-bold">
+                Resumen
+              </h2>
+            </div>
+          </div>
+          <Resumen tirosConEstaciones={tirosConEstaciones} />
+        </section>
+
       </div>
     </main>
   )

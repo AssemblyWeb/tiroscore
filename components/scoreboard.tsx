@@ -225,7 +225,6 @@ function ArcherHistory({ archerId, archerSlug }: { archerId: string, archerSlug:
     async function loadData() {
       try {
         const data = await getTournamentEntries(archerId)
-        console.log("data", data)
         if (!active) return
         setEntries(data)
       } catch {

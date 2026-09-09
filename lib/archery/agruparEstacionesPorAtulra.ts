@@ -10,7 +10,6 @@ export type EstacionesPorAltura = {
  * Categoriza las estaciones de tiro según la altura del tiro (bajo, llano, alto).
  */
 export function agruparEstacionesPorAltura(stations: CourseStation[]): EstacionesPorAltura {
-  console.log("stationsstations", stations)
   return stations.reduce<EstacionesPorAltura>(
     (acc, station) => {
       const h = (station.height || '').toLowerCase()

@@ -9,7 +9,6 @@ type ResumenDistanciasChartsProps = {
 
 export function ResumenDistanciasCharts({ stations, className }: ResumenDistanciasChartsProps) {
   const agrupadas = groupStationsByDistance(stations)
-console.log("stations", stations)
   return (
     <div className={className}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">

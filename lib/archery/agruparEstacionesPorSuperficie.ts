@@ -52,7 +52,6 @@ export type EstacionesPorSuperficie = {
 }
 
 export function agruparEstacionesPorSuperficie(stations: CourseStation[]): EstacionesPorSuperficie {
-  console.log("stationsstationsstations", stations)
   return stations.reduce<EstacionesPorSuperficie>(
     (acc, station) => {
       const sup = (station.superficie || '').toLowerCase()
