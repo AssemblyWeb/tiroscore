@@ -263,7 +263,7 @@ function ArcherHistory({ archerId, archerSlug }: { archerId: string, archerSlug:
           const hasLink = typeof entry.tournamentSlug === 'string' && entry.tournamentSlug.trim().length > 0
 
           const content = (
-            <div className="flex items-center justify-between gap-4 rounded-xl border-2 border-primary/50 p-4 transition hover:border-primary hover:bg-accent">
+            <div className="flex items-center justify-between gap-4 rounded-xl border-2 border-primary/50 p-4 transition hover:border-primary hover:bg-accent mb-3">
               <div>
                 <p className="font-semibold">{label}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{detail} · {scoreText}</p>
