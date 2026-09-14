@@ -1,6 +1,7 @@
 import { Scoreboard } from '@/components/scoreboard'
 import { formatSupabaseError } from '@/lib/supabase/errors'
 import { getRankingEntries, getSeasonInfo  } from '@/lib/ranking'
+export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   const season = getSeasonInfo()
