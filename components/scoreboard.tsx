@@ -189,7 +189,7 @@ function DivisionTable({
                 <td className="px-4 py-3 font-bold">
                   <button
                     onClick={() => onSelect(row)}
-                    className="group inline-flex items-center gap-1 text-left hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="group cursor-pointer inline-flex items-center gap-1 text-left hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span>{row.name}</span>
                     <ChevronRight

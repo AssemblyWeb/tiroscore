@@ -125,3 +125,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+label,
+.cursor-pointer {
+  cursor: url('../public/cursor/arrow-cursor.svg') 8 8, pointer !important;
+}
