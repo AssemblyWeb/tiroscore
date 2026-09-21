@@ -295,7 +295,7 @@ export default async function ArcherTournamentPage({
               </p>
             </div>
           </div>
-          <ResumenDistanciasCharts stations={stationsFormat} className="w-full" />
+          <ResumenDistanciasCharts tirosConEstaciones={tirosConEstaciones} className="w-full" />
         </section>
 
         {/* Rangos de altura */}

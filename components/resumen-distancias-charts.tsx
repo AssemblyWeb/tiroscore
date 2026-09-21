@@ -4,11 +4,14 @@ import { DistanciaStatCard } from "../lib/archery/distancia-stat-card"
 
 type ResumenDistanciasChartsProps = {
   stations: CourseStation[]
+  dista
   className?: string
 }
 
-export function ResumenDistanciasCharts({ stations, className }: ResumenDistanciasChartsProps) {
-  const agrupadas = groupStationsByDistance(stations)
+export function ResumenDistanciasCharts({ tirosConEstaciones, className }: ResumenDistanciasChartsProps) {
+  console.log("stations", tirosConEstaciones, "className", className)
+  const agrupadas = groupStationsByDistance(tirosConEstaciones, )
+  console.log("agrupadas", agrupadas)
   return (
     <div className={className}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
