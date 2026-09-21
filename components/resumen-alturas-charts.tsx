@@ -14,7 +14,7 @@ export function ResumenAlturasCharts({ stations, className }: ResumenAlturasChar
     <div className={className}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
         <AlturaStatCard
-          titulo="Tiros Bajos"
+          titulo="Tiros descendentes"
           subtitulo="Bajada / Tiro Bajo"
           estaciones={agrupadas.bajos}
           variant="purple"
@@ -26,7 +26,7 @@ export function ResumenAlturasCharts({ stations, className }: ResumenAlturasChar
           variant="slate"
         />
         <AlturaStatCard
-          titulo="Tiros Altos"
+          titulo="Tiros ascendentes"
           subtitulo="Subida / Tiro Alto"
           estaciones={agrupadas.altos}
           variant="orange"

@@ -297,15 +297,15 @@ export default async function ArcherTournamentPage({
           <ResumenDistanciasCharts tirosConEstaciones={tirosConEstaciones} className="w-full" />
         </section>
 
-        {/* Rangos de altura */}
+        {/* Rangos de inclinación */}
         <section className="mt-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <h2 className="mt-2 text-2xl font-bold">
-                Rangos de altura
+                Rangos de inclinación
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Distribución de puntajes según la elevación del tiro (bajos, llanos y altos)
+                Distribución de puntajes según la inclinación del tiro (bajos, llanos y altos)
               </p>
             </div>
           </div>
