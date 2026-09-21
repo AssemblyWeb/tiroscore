@@ -40,7 +40,9 @@ export type Tournament = {
 
 export type CourseStation = {
   number: number
-  distance: number
+  yellow_marker_distance: number
+  blue_marker_distance: number
+  red_marker_distance: number
   height: string
   animal: Animal | null
 }
@@ -51,7 +53,7 @@ export type PlanillaHeader = {
   archerNumber: number | null
   startingStation: number | null
   division: string | null
-  className: string | null
+  categoria: string | null
 }
 
 export type TiroEstacionHeader = {

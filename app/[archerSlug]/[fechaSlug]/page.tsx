@@ -46,7 +46,6 @@ export default async function ArcherTournamentPage({
     getArcherPlanilla(Number(archer.id), tournament.id),
     getTournamentStations(tournament.id),
   ])
-
   // Validación si el arquero no cargó planilla para este torneo
   if (!planilla) {
     return (
@@ -63,6 +62,7 @@ export default async function ArcherTournamentPage({
   }
 
   const tirosEstaciones = await getTirosEstacionesByPlanillaId(planilla.id)
+  console.log(tirosEstaciones)
 
   // ==========================================
   // PROCESAMIENTO DE DATOS Y ESTADÍSTICAS
@@ -87,14 +87,57 @@ export default async function ArcherTournamentPage({
   // Sincronización de estaciones: asocia cada tiro con su estación correspondiente 
   // teniendo en cuenta la estación de inicio (startingStation) del arquero.
   const startIndex = stations.findIndex(s => s.number === planilla.startingStation)
+  const obtenerDistanciaSegunPlanilla = (station, planilla) => {
+    const cat = planilla.categoria ? planilla.categoria.toLowerCase().trim() : '';
+    const div = planilla.division ? planilla.division.toLowerCase().trim() : '';
+  
+    // 1. AMARILLO: Tradicional / Raso / Longbow + Escuela
+    if (
+      (cat.includes('recurvo tradicional') || cat.includes('raso') || cat.includes('longbow')) &&
+      div.includes('escuela')
+    ) {
+
+      return station.yellow_marker_distance;
+    }
+  
+    // 2. AZUL: 
+    // - Tradicional / Raso / Longbow + Masculino Senior / Femenino Senior
+    // - Cazador Libre + Escuela
+    if (
+      ((cat.includes('recurvo tradicional') || cat.includes('raso') || cat.includes('longbow')) &&
+        (div.includes('masculino senior') || div.includes('femenino senior'))) ||
+      ((cat.includes('cazador') || cat.includes('libre')) && div.includes('escuela'))
+    ) {
+      return station.blue_marker_distance;
+    }
+  
+    // 3. ROJO: Cazador / Libre + Masculino Senior / Femenino Senior
+    if (
+      (cat.includes('cazador') || cat.includes('libre')) &&
+      (div.includes('masculino senior') || div.includes('femenino senior'))
+    ) {
+      return station.red_marker_distance;
+    }
+  
+    return null; // Valor por defecto por si no hace match con ninguno
+  };
+  
+  // Tu map integrado utilizando el objeto 'planilla'
   const tirosConEstaciones = tirosEstaciones.map((tiro, index) => {
-    const stationIndex = (startIndex + index) % stations.length
+    const stationIndex = (startIndex + index) % stations.length;
+    const station = stations[stationIndex];
+  
+    // Obtenemos la distancia correcta evaluando la planilla
+    const distanciaCorrecta = obtenerDistanciaSegunPlanilla(station, planilla);
+    const { yellow_marker_distance, blue_marker_distance, red_marker_distance, ...stationRest } = station;
     return {
       ...tiro,
-      station: stations[stationIndex],
-    }
-  })
-
+      station: {
+        ...stationRest,
+        distance: distanciaCorrecta, // Asignamos la distancia resultante de la regla
+      },
+    };
+  });
   // Obtención de métricas globales y por vuelta
   const total = tirosEstaciones.reduce((max, tiro) => Math.max(max, tiro.acumulado), 0) || 0
   const estacionesCategorizadas = groupStationsByDistance(stations)
@@ -103,7 +146,9 @@ export default async function ArcherTournamentPage({
   // Formato plano necesario para los componentes de gráficos de resumen (distancia, altura, superficie)
   const stationsFormat: CourseStation[] = tirosConEstaciones.map((item: any) => ({
     number: item.station.number,
-    distance: item.station.distance,
+    yellow_marker_distance: item.station.yellow_marker_distance,
+    blue_marker_distance: item.station.blue_marker_distance,
+    red_marker_distance: item.station.red_marker_distance,
     height: item.station.height,
     superficie: item.station.animal.superficie,
     tiro1: item.tiro1,

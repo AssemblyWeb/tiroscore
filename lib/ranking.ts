@@ -224,7 +224,7 @@ export async function getTournamentStations(tournamentId: string): Promise<Cours
   const supabase = createSupabaseClient()
   const { data, error } = await supabase
     .from('torneo_estaciones')
-    .select('numero_estacion, distancia, altura, animal_id, animales ( id, tipo, superficie, imagen )')
+    .select('numero_estacion, yellow_marker_distance, blue_marker_distance, red_marker_distance, altura, animal_id, animales ( id, tipo, superficie, imagen )')
     .eq('torneo_id', tournamentId)
     .order('numero_estacion')
 
@@ -232,12 +232,16 @@ export async function getTournamentStations(tournamentId: string): Promise<Cours
 
   return (data ?? []).map((row: {
     numero_estacion: number
-    distancia: number
+    yellow_marker_distance: number
+    blue_marker_distance: number
+    red_marker_distance: number
     altura: string
     animales?: AnimalRow | AnimalRow[] | null
   }) => ({
     number: row.numero_estacion,
-    distance: row.distancia,
+    yellow_marker_distance: row.yellow_marker_distance,
+    blue_marker_distance: row.blue_marker_distance,
+    red_marker_distance: row.red_marker_distance,
     height: row.altura,
     animal: mapAnimal(unwrap(row.animales)),
   }))
@@ -286,7 +290,7 @@ export async function getArcherPlanilla(archerId: number, tournamentId: string) 
   const supabase = createSupabaseClient()
   const { data, error } = await supabase
     .from('planillas')
-    .select('id, torneo_id, arquero_id, patrulla, division, clase, arquero_numero, estacion_inicial')
+    .select('id, torneo_id, arquero_id, patrulla, division, categoria, arquero_numero, estacion_inicial')
     .eq('arquero_id', archerId)
     .eq('torneo_id', tournamentId)
     .maybeSingle()
@@ -300,7 +304,7 @@ export async function getArcherPlanilla(archerId: number, tournamentId: string) 
     archerNumber: data.arquero_numero,
     startingStation: data.estacion_inicial,
     division: data.division,
-    className: data.clase,
+    categoria: data.categoria,
   }
 
   return header

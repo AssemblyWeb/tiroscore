@@ -323,8 +323,8 @@ function ArcherPanel({ archer, onClose }: { archer: RankingArcher; onClose: () =
             <p className="mt-1 font-mono text-3xl font-bold">{archer.total}</p>
           </div>
           <div className="rounded-xl bg-muted p-4">
-            <p className="text-xs text-muted-foreground">División</p>
-            <p className="mt-1 text-lg font-bold">{archer.division}</p>
+            <p className="text-xs text-muted-foreground">Categoria y división</p>
+            <p className="mt-1 text-lg font-bold">{archer.category} {archer.division}</p>
           </div>
         </div>
         <ArcherHistory archerId={archer.id} archerSlug={archer.slug} />
