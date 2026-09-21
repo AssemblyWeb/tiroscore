@@ -27,7 +27,6 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function TiroStatChart({ contadorPuntajes }: TiroStatChartProps) {
-  console.log("contadorPuntajes", contadorPuntajes)
   // Calculamos el total general para sacar los porcentajes reales
   const totalCantidad = Object.values(contadorPuntajes).reduce((acc, val) => acc + val, 0)
 

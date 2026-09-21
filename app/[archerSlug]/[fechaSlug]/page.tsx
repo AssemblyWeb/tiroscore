@@ -62,7 +62,6 @@ export default async function ArcherTournamentPage({
   }
 
   const tirosEstaciones = await getTirosEstacionesByPlanillaId(planilla.id)
-  console.log(tirosEstaciones)
 
   // ==========================================
   // PROCESAMIENTO DE DATOS Y ESTADÍSTICAS

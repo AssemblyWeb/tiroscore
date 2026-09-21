@@ -15,12 +15,12 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
-import type { Station } from "@/lib/types/ranking"
+import type { CourseStation } from "@/lib/types/ranking"
 
 type DistanciaStatCardProps = {
   titulo: string
   rangoEtiqueta: string
-  estaciones: Station[]
+  estaciones: CourseStation[]
   variant: "emerald" | "amber" | "blue"
 }
 
@@ -57,8 +57,12 @@ export function DistanciaStatCard({
   estaciones,
   variant,
 }: DistanciaStatCardProps) {
-  // 1. Extraer distancias mín y máx de este grupo
-  const distancias = estaciones.map((s) => s.distance)
+
+  // 1. Extraer distancias mín y máx a través de item.station.distance
+  const distancias = estaciones
+    .map((item) => item.station?.distance)
+    .filter((d): d is number => d !== undefined)
+  
   const minDistance = distancias.length > 0 ? Math.min(...distancias) : 0
   const maxDistance = distancias.length > 0 ? Math.max(...distancias) : 0
 
@@ -71,9 +75,11 @@ export function DistanciaStatCard({
     11: 0,
   }
 
-  // Acumulamos los puntajes de todas las vueltas/tiros
-  estaciones.forEach((station) => {
-    ;[station.tiro1, station.tiro2].forEach((puntos) => {
+  // Acumulamos los puntajes de los tiros (soporta tanto tiro1/tiro2 como variantes previas)
+  estaciones.forEach((item) => {
+    const t1 = item.tiro1 ?? item.tirol
+    const t2 = item.tiro2
+    ;[t1, t2].forEach((puntos) => {
       if (puntos !== undefined && puntos !== null && contadorPuntajes[puntos] !== undefined) {
         contadorPuntajes[puntos] += 1
       }
@@ -104,10 +110,12 @@ export function DistanciaStatCard({
     }
   })
 
-  // 4. Obtenemos las estaciones únicas filtrando duplicados y ordenándolas por número
+  // 4. Obtenemos las estaciones únicas accediendo a item.station.number
   const estacionesUnicas = Array.from(
-    new Map(estaciones.map((s) => [s.number, s])).values()
-  ).sort((a, b) => a.number - b.number)
+    new Map(estaciones.map((item) => [item.station?.number, item.station])).values()
+  )
+    .filter((station): station is NonNullable<typeof station> => station !== undefined)
+    .sort((a, b) => a.number - b.number)
 
   const style = variantStyles[variant]
 
