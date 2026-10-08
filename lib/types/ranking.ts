@@ -71,3 +71,57 @@ export type EstacionesPorDistancia = {
   medias: CourseStation[]
   largas: CourseStation[]
 }
+
+
+export type ArqueroRow = {
+  id: number
+  nombre: string
+  club: string
+  categoria: string
+  division: string
+  localidad: string
+  torneo_1: number | null
+  torneo_2: number | null
+  torneo_3: number | null
+  torneo_4: number | null
+  total: number | null
+}
+
+export type TorneoRow = {
+  id: string
+  fecha: string | null
+  nombre: string
+  total_estaciones: number | null
+  vueltas: number | null
+  tipo_torneo: string | null
+}
+
+export type AnimalRow = {
+  id: number
+  tipo: string
+  superficie: Animal['superficie']
+  imagen: string
+}
+
+export type PlanillaRow = {
+  id: number
+  torneo_id: string
+  arquero_id: number
+  patrulla: number | null
+  division: string | null
+  clase: string | null
+  arquero_numero: number | null
+  estacion_inicial: number | null
+  torneos?: TorneoRow | TorneoRow[] | null
+  arqueros?: ArqueroRow | ArqueroRow[] | null
+}
+
+export type TournamentHistoryEntry = {
+  id: number
+  torneo_id: string | null
+  arquero_id: number | null
+  total?: number | null
+  tournamentName?: string | null
+  tournamentSlug?: string | null
+  tournamentDate?: string | null
+}

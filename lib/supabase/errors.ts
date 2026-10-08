@@ -14,5 +14,5 @@ export function formatSupabaseError(error: unknown): string {
   }
 
   if (error instanceof Error) return error.message
-  return 'Error desconocido al consultar Supabase'
+  return 'Error desconocido al consultar la base de datos'
 }

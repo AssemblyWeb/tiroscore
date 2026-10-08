@@ -8,60 +8,12 @@ import type {
   SeasonInfo,
   Tournament,
   TiroEstacionHeader,
+  TournamentHistoryEntry,
+  PlanillaRow,
+  AnimalRow,
+  TorneoRow,
+  ArqueroRow
 } from '@/lib/types/ranking'
-
-type ArqueroRow = {
-  id: number
-  nombre: string
-  club: string
-  categoria: string
-  division: string
-  localidad: string
-  torneo_1: number | null
-  torneo_2: number | null
-  torneo_3: number | null
-  torneo_4: number | null
-  total: number | null
-}
-
-type TorneoRow = {
-  id: string
-  fecha: string | null
-  nombre: string
-  total_estaciones: number | null
-  vueltas: number | null
-  tipo_torneo: string | null
-}
-
-type AnimalRow = {
-  id: number
-  tipo: string
-  superficie: Animal['superficie']
-  imagen: string
-}
-
-type PlanillaRow = {
-  id: number
-  torneo_id: string
-  arquero_id: number
-  patrulla: number | null
-  division: string | null
-  clase: string | null
-  arquero_numero: number | null
-  estacion_inicial: number | null
-  torneos?: TorneoRow | TorneoRow[] | null
-  arqueros?: ArqueroRow | ArqueroRow[] | null
-}
-
-export type TournamentHistoryEntry = {
-  id: number
-  torneo_id: string | null
-  arquero_id: number | null
-  total?: number | null
-  tournamentName?: string | null
-  tournamentSlug?: string | null
-  tournamentDate?: string | null
-}
 
 const DEFAULT_SEASON: SeasonInfo = {
   slug: 'liga-pinamarense-2026',
@@ -309,6 +261,7 @@ export async function getArcherPlanilla(archerId: number, tournamentId: string) 
 
   return header
 }
+
 export async function getTirosEstacionesByPlanillaId(planillaId: number) {
   const supabase = createSupabaseClient()
   
