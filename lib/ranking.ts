@@ -289,3 +289,46 @@ export async function getTirosEstacionesByPlanillaId(planillaId: number) {
 export function getSeasonInfo(): SeasonInfo {
   return DEFAULT_SEASON
 }
+
+export async function getTournamentScoreboard(tournamentId: string) {
+  const supabase = createSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('vista_planillas_con_total') // <--- Apuntamos a la vista que creamos para obtener el puntaje total y los tiros de 11 y 10
+    .select(`
+      id,
+      torneo_id,
+      patrulla,
+      categoria,
+      division,
+      arquero_numero,
+      estacion_inicial,
+      puntaje_total,
+      cantidad_11,
+      cantidad_10,
+      arqueros (
+        id,
+        nombre,
+        club,
+        localidad
+      ),
+      tiros_estaciones (
+        id,
+        tiro_1,
+        tiro_2,
+        parcial,
+        acumulado
+      )
+    `)
+    .eq('torneo_id', tournamentId)
+    .order('puntaje_total', { ascending: false }) // 1º Criterio: Mayor puntaje total
+    .order('cantidad_11', { ascending: false })   // 2º Criterio de desempate: Más tiros de 11
+    .order('cantidad_10', { ascending: false })   // 3º Criterio de desempate: Más tiros de 10
+
+  if (error) {
+    console.error("Error de Supabase:", error.message)
+    throw new Error(error.message)
+  }
+
+  return data ?? []
+}

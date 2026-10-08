@@ -2,11 +2,13 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Target, Trophy } from 'lucide-react'
 import { AnimalImage } from '@/components/animal-image'
+import { Scoreboard as ScoreboardTournamentComponent } from '@/components/scoreboard-tournament'
 import {
   getTournamentById,
   getTournamentClassification,
   getTournamentStations,
   getTournamentsOrdered,
+  getTournamentScoreboard,
 } from '@/lib/ranking'
 
 export default async function TournamentPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -15,11 +17,14 @@ export default async function TournamentPage({ params }: { params: Promise<{ slu
 
   if (!tournament) notFound()
 
-  const [stations, ranked, allTournaments] = await Promise.all([
+  const [stations, ranked, allTournaments, scoreboard] = await Promise.all([
     getTournamentStations(tournament.id),
     getTournamentClassification(tournament.id),
     getTournamentsOrdered(),
+    getTournamentScoreboard(tournament.id),
   ])
+
+  console.log('scoreboard', scoreboard)
 
   const round = allTournaments.findIndex((item) => item.id === tournament.id)
   const participants = ranked.length
@@ -81,7 +86,11 @@ export default async function TournamentPage({ params }: { params: Promise<{ slu
           ))}
         </section>
 
-        {ranked.length > 0 && (
+        <section className="mt-10">
+          <ScoreboardTournamentComponent entries={scoreboard} />
+        </section>
+
+        {/* {ranked.length > 0 && (
           <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -120,9 +129,9 @@ export default async function TournamentPage({ params }: { params: Promise<{ slu
               </table>
             </div>
           </section>
-        )}
+        )} */}
 
-        <section className="mt-10">
+        {/* <section className="mt-10">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
@@ -178,7 +187,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ slu
               </table>
             </div>
           )}
-        </section>
+        </section> */}
       </div>
     </main>
   )

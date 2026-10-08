@@ -54,6 +54,7 @@ export type PlanillaHeader = {
   startingStation: number | null
   division: string | null
   categoria: string | null
+  puntaje_final: number | null
 }
 
 export type TiroEstacionHeader = {
