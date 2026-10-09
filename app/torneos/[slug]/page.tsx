@@ -86,50 +86,9 @@ export default async function TournamentPage({ params }: { params: Promise<{ slu
           ))}
         </section>
 
-        <section className="mt-10">
+        <section className="mt-10 pb-3 border-b-1">
           <ScoreboardTournamentComponent entries={scoreboard} />
         </section>
-
-        {/* {ranked.length > 0 && (
-          <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
-                  Clasificación
-                </p>
-                <h2 className="mt-2 text-xl font-bold">Resultados del torneo</h2>
-              </div>
-              <span className="text-sm text-muted-foreground">{participants} participantes</span>
-            </div>
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[650px] text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-3 py-3">Puesto</th>
-                    <th className="px-3 py-3">Arquero</th>
-                    <th className="px-3 py-3">División</th>
-                    <th className="px-3 py-3 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ranked.map((archer, index) => {
-                    const score = round >= 0 ? archer.scores[round] : archer.total
-                    return (
-                      <tr key={archer.id} className="border-b border-border last:border-0">
-                        <td className="px-3 py-4 font-mono font-bold">{index + 1}</td>
-                        <td className="px-3 py-4 font-semibold">{archer.name}</td>
-                        <td className="px-3 py-4 text-muted-foreground">{archer.division}</td>
-                        <td className="px-3 py-4 text-right font-mono font-bold">
-                          {score && score > 0 ? score : '—'}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )} */}
 
         {/* <section className="mt-10">
           <div className="mb-4 flex items-end justify-between">

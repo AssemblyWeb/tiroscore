@@ -49,9 +49,9 @@ export function Scoreboard({ entries }: { entries: RankingArcher[] }) {
   }, [entries, category])
 console.log('visibleDivisions', visibleDivisions)
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screens bg-background pb-10">
 
-      <main className="mx-auto max-w-[1400px] px-3 pb-20 pt-6 sm:px-5 lg:px-10">
+      <main className="mx-auto max-w-[1400px] px-3 pt-6 sm:px-5 lg:px-10">
         <h2 className="mt-1 mb-7 text-center text-3xl font-extrabold tracking-tight sm:text-4xl">Resultados por Categoría</h2>
 
         {/* Botones de Categorías (Pestañas) */}
